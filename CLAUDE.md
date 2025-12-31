@@ -119,9 +119,24 @@ swift package --package-path Benchmarks --allow-writing-to-package-directory ben
 
 # Compare against baseline
 swift package --package-path Benchmarks --allow-writing-to-package-directory benchmark baseline compare main
+
+# Save results to history folder with timestamp
+swift package --package-path Benchmarks --allow-writing-to-package-directory benchmark --no-progress > "history/benchmark_$(date +%Y-%m-%d_%H-%M-%S).txt" 2>&1
 ```
 
-The benchmarks compare SwiftHighlight against [HighlightSwift](https://github.com/appstefan/HighlightSwift) measuring wall clock time and malloc count.
+The Swift benchmarks compare SwiftHighlight against [HighlightSwift](https://github.com/appstefan/HighlightSwift) measuring wall clock time and malloc count.
+
+### Node.js Benchmark (highlight.js)
+
+To compare against the original highlight.js library running in Node.js:
+
+```bash
+cd Benchmarks/nodejs
+npm install
+node benchmark.js
+```
+
+Historical benchmark results are stored in the `history/` folder for tracking performance over time.
 
 ## Reference Material
 
