@@ -114,8 +114,8 @@ public enum Regex {
 
                 // Check if this is a backreference
                 if matchedText.hasPrefix("\\"),
-                   let captureRange = Range(match.range(at: 1), in: remaining),
-                   match.range(at: 1).location != NSNotFound {
+                   match.range(at: 1).location != NSNotFound,
+                   Range(match.range(at: 1), in: remaining) != nil {
                     // This is a backreference - need to look at original remaining
                     let originalRemaining = pattern.suffix(from: pattern.index(pattern.startIndex, offsetBy: pattern.count - remaining.count - matchedText.count))
                     let fullMatch = String(originalRemaining[..<originalRemaining.index(originalRemaining.startIndex, offsetBy: matchedText.count)])

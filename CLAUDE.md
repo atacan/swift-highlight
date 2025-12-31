@@ -99,6 +99,30 @@ Classes use `@unchecked Sendable` because they have mutable properties for the b
 
 `NSRegularExpression` uses UTF-16 offsets. The parser converts between `String.Index` and UTF-16 positions carefully to avoid crashes with multi-byte characters.
 
+## Benchmarks
+
+Benchmarks are in a separate package (`Benchmarks/`) to keep the main library dependency-free.
+
+```bash
+# Run benchmarks (from Benchmarks directory)
+cd Benchmarks
+swift package --allow-writing-to-package-directory benchmark
+
+# Or from project root
+swift package --package-path Benchmarks --allow-writing-to-package-directory benchmark
+
+# Run specific benchmark
+swift package --package-path Benchmarks --allow-writing-to-package-directory benchmark --filter "Simple"
+
+# Save a baseline
+swift package --package-path Benchmarks --allow-writing-to-package-directory benchmark baseline update main
+
+# Compare against baseline
+swift package --package-path Benchmarks --allow-writing-to-package-directory benchmark baseline compare main
+```
+
+The benchmarks compare SwiftHighlight against [HighlightSwift](https://github.com/appstefan/HighlightSwift) measuring wall clock time and malloc count.
+
 ## Reference Material
 
 The `highlight.js/` directory contains the original JavaScript library for reference when porting features or debugging behavior differences.

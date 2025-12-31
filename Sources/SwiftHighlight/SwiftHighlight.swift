@@ -97,18 +97,8 @@ public final class Highlight: @unchecked Sendable {
             }
         }
 
-        // Sort by relevance
-        results.sort { a, b in
-            if a.relevance != b.relevance {
-                return a.relevance > b.relevance
-            }
-            // Prefer base language over supersets
-            if let langA = getLanguage(a.language),
-               let langB = getLanguage(b.language) {
-                // This would need supersetOf support
-            }
-            return false
-        }
+        // Sort by relevance (higher is better)
+        results.sort { $0.relevance > $1.relevance }
 
         let best = results[0]
         let secondBest = results.count > 1 ? results[1] : nil
@@ -122,16 +112,7 @@ public final class Highlight: @unchecked Sendable {
     ///   - name: The language name
     ///   - definition: Function that creates the language definition
     public func registerLanguage(_ name: String, definition: @escaping (Highlight) -> Language) {
-        let lang: Language
-        do {
-            lang = definition(self)
-        } catch {
-            // Use plaintext as fallback
-            let fallback = Language(name: name)
-            fallback.disableAutodetect = true
-            languages[name] = fallback
-            return
-        }
+        let lang = definition(self)
 
         if lang.name.isEmpty {
             lang.name = name
@@ -441,14 +422,14 @@ public final class Highlight: @unchecked Sendable {
             let result = highlight(text, language: langName, ignoreIllegals: true)
             // Would need to add sublanguage emitter
             emitter.addText(result.value)
-            if mode.relevance ?? 0 > 0 {
+            if mode.relevance > 0 {
                 relevance += result.relevance
             }
 
         case .multiple(let subset):
             let result = highlightAuto(text, languageSubset: subset.isEmpty ? nil : subset)
             emitter.addText(result.value)
-            if mode.relevance ?? 0 > 0 {
+            if mode.relevance > 0 {
                 relevance += result.relevance
             }
         }
