@@ -1,87 +1,102 @@
 import Foundation
 
+// MARK: - Box for Indirection
+
+/// A box type to enable recursive struct definitions
+/// Used to wrap Mode references that would otherwise create infinite-size types
+/// This is Sendable because it only contains an immutable Mode value.
+public final class ModeBox: Sendable, Hashable {
+    public let value: Mode
+
+    public init(_ value: Mode) {
+        self.value = value
+    }
+
+    public static func == (lhs: ModeBox, rhs: ModeBox) -> Bool {
+        lhs.value.id == rhs.value.id
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(value.id)
+    }
+}
+
 /// A highlighting mode that defines how to match and highlight a portion of code.
-public final class Mode: @unchecked Sendable {
+public struct Mode: Sendable, Hashable {
+    /// Unique identifier for cycle detection during compilation
+    public let id: UUID
+
     /// Scope name for CSS class (e.g., "string", "comment", "keyword")
-    public var scope: String?
+    public let scope: String?
 
     /// CSS class name (legacy, prefer scope)
-    public var className: String?
+    public let className: String?
 
     /// Pattern to match the beginning of this mode
-    public var begin: RegexPattern?
+    public let begin: RegexPattern?
 
     /// Pattern to match the end of this mode
-    public var end: RegexPattern?
+    public let end: RegexPattern?
 
     /// Shorthand for a begin-only mode (match)
-    public var match: RegexPattern?
+    public let match: RegexPattern?
 
     /// Keywords for this mode
-    public var keywords: Keywords?
+    public let keywords: Keywords?
 
     /// Illegal patterns within this mode
-    public var illegal: RegexPattern?
+    public let illegal: RegexPattern?
 
-    /// Child modes
-    public var contains: [ModeReference]
+    /// Child modes (boxed to break recursion)
+    public let contains: [ModeReference]
 
-    /// Mode variants (alternative patterns)
-    public var variants: [Mode]?
+    /// Mode variants (boxed to break recursion)
+    public let variants: [ModeBox]?
 
     /// Relevance score for this mode (default: 1)
-    public var relevance: Int?
+    public let relevance: Int?
 
     /// Exclude the begin match from highlighting
-    public var excludeBegin: Bool
+    public let excludeBegin: Bool
 
     /// Exclude the end match from highlighting
-    public var excludeEnd: Bool
+    public let excludeEnd: Bool
 
     /// Return to parent after begin match
-    public var returnBegin: Bool
+    public let returnBegin: Bool
 
     /// Return to parent after end match
-    public var returnEnd: Bool
+    public let returnEnd: Bool
 
     /// End when parent ends
-    public var endsWithParent: Bool
+    public let endsWithParent: Bool
 
     /// End parent when this ends
-    public var endsParent: Bool
+    public let endsParent: Bool
 
     /// Skip this mode content (used for sub-language buffer building)
-    public var skip: Bool
+    public let skip: Bool
 
     /// Sub-language to use for content
-    public var subLanguage: SubLanguage?
+    public let subLanguage: SubLanguage?
 
     /// Begin scope for multi-class matching
-    public var beginScope: Scope?
+    public let beginScope: Scope?
 
     /// End scope for multi-class matching
-    public var endScope: Scope?
+    public let endScope: Scope?
 
-    /// Mode that starts after this mode ends
-    public var starts: Mode?
+    /// Mode that starts after this mode ends (boxed to break recursion)
+    public let starts: ModeBox?
 
     /// Callback when mode begins
-    public var onBegin: ModeCallback?
+    public let onBegin: ModeCallback?
 
     /// Callback when mode ends
-    public var onEnd: ModeCallback?
+    public let onEnd: ModeCallback?
 
     /// Begin keywords - converts to a begin pattern matching any of these keywords
-    public var beginKeywords: String?
-
-    /// Internal: marks if this mode has been compiled (used to prevent infinite recursion)
-    internal var isCompiled = false
-
-    /// Internal: cached compiled mode to reuse for .self references
-    internal weak var cachedCompiledMode: CompiledMode?
-
-    /// Internal: cached expanded variants
-    internal var cachedVariants: [Mode]?
+    public let beginKeywords: String?
 
     public init(
         scope: String? = nil,
@@ -92,7 +107,7 @@ public final class Mode: @unchecked Sendable {
         keywords: Keywords? = nil,
         illegal: RegexPattern? = nil,
         contains: [ModeReference] = [],
-        variants: [Mode]? = nil,
+        variants: [ModeBox]? = nil,
         relevance: Int? = nil,
         excludeBegin: Bool = false,
         excludeEnd: Bool = false,
@@ -104,11 +119,12 @@ public final class Mode: @unchecked Sendable {
         subLanguage: SubLanguage? = nil,
         beginScope: Scope? = nil,
         endScope: Scope? = nil,
-        starts: Mode? = nil,
+        starts: ModeBox? = nil,
         onBegin: ModeCallback? = nil,
         onEnd: ModeCallback? = nil,
         beginKeywords: String? = nil
     ) {
+        self.id = UUID()
         self.scope = scope
         self.className = className
         self.begin = begin
@@ -135,41 +151,26 @@ public final class Mode: @unchecked Sendable {
         self.beginKeywords = beginKeywords
     }
 
-    /// Creates a copy of this mode
-    public func copy() -> Mode {
-        let m = Mode()
-        m.scope = scope
-        m.className = className
-        m.begin = begin
-        m.end = end
-        m.match = match
-        m.keywords = keywords
-        m.illegal = illegal
-        m.contains = contains
-        m.variants = variants
-        m.relevance = relevance
-        m.excludeBegin = excludeBegin
-        m.excludeEnd = excludeEnd
-        m.returnBegin = returnBegin
-        m.returnEnd = returnEnd
-        m.endsWithParent = endsWithParent
-        m.endsParent = endsParent
-        m.skip = skip
-        m.subLanguage = subLanguage
-        m.beginScope = beginScope
-        m.endScope = endScope
-        m.starts = starts?.copy()
-        m.onBegin = onBegin
-        m.onEnd = onEnd
-        m.beginKeywords = beginKeywords
-        return m
+    // MARK: - Hashable
+
+    public static func == (lhs: Mode, rhs: Mode) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 
 /// Reference to a mode - allows 'self' references in contains
-public enum ModeReference: Sendable {
-    case mode(Mode)
+public enum ModeReference: Sendable, Hashable {
+    case mode(ModeBox)
     case `self`
+
+    /// Convenience initializer for creating a mode reference
+    public static func mode(_ mode: Mode) -> ModeReference {
+        .mode(ModeBox(mode))
+    }
 }
 
 /// Sub-language specification
@@ -185,20 +186,13 @@ public enum Scope: Sendable {
     case indexed([Int: String])
 }
 
-/// Response object for mode callbacks
-public final class ModeCallbackResponse: @unchecked Sendable {
-    /// Set to true to ignore this match
-    public var isMatchIgnored = false
-
-    /// Data storage for callbacks
-    public var data: [String: Any] = [:]
-
-    public init() {}
-
-    public func ignoreMatch() {
-        isMatchIgnored = true
-    }
+/// Result of a mode callback indicating how to handle the match
+public enum ModeCallbackResult: Sendable {
+    /// Continue with normal processing of this match
+    case `continue`
+    /// Ignore this match and continue scanning
+    case ignoreMatch
 }
 
-/// Type for mode callbacks
-public typealias ModeCallback = @Sendable (NSTextCheckingResult, ModeCallbackResponse) -> Void
+/// Type for mode callbacks - returns a result indicating how to handle the match
+public typealias ModeCallback = @Sendable (NSTextCheckingResult) -> ModeCallbackResult

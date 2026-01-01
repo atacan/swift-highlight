@@ -2,12 +2,12 @@ import Foundation
 
 /// Main syntax highlighting engine.
 /// Port of highlight.js for Swift.
-public final class Highlight: @unchecked Sendable {
+public actor Highlight {
     /// Shared instance with default configuration
     public static let shared = Highlight()
 
     /// Library version
-    public static let version = "1.0.0"
+    public nonisolated static let version = "1.0.0"
 
     /// Configuration options
     public var options: HighlightOptions
@@ -25,11 +25,7 @@ public final class Highlight: @unchecked Sendable {
     private var compiledLanguages: [String: CompiledMode] = [:]
 
     /// Plaintext language for fallback
-    private let plaintextLanguage: Language = {
-        let lang = Language(name: "Plain text")
-        lang.disableAutodetect = true
-        return lang
-    }()
+    private let plaintextLanguage = Language(name: "Plain text", disableAutodetect: true)
 
     /// Creates a new Highlight instance
     public init(options: HighlightOptions = HighlightOptions()) {
@@ -173,18 +169,13 @@ public final class Highlight: @unchecked Sendable {
     /// - Parameters:
     ///   - name: The language name
     ///   - definition: Function that creates the language definition
-    public func registerLanguage(_ name: String, definition: @escaping (Highlight) -> Language) {
+    public func registerLanguage(_ name: String, definition: @Sendable (Highlight) -> Language) {
         let lang = definition(self)
-
-        if lang.name.isEmpty {
-            lang.name = name
-        }
         languages[name] = lang
-        lang.rawDefinition = definition
         compiledLanguages.removeValue(forKey: name)
 
-        if let langAliases = lang.aliases {
-            registerAliases(langAliases, languageName: name)
+        if !lang.aliases.isEmpty {
+            registerAliases(lang.aliases, languageName: name)
         }
     }
 
@@ -227,8 +218,7 @@ public final class Highlight: @unchecked Sendable {
 
     private func justTextResult<R: TokenRenderer>(_ code: String, renderer: R) -> HighlightResult<R.Output> {
         // Create a simple token tree with just the text
-        let root = ScopeNode()
-        root.children = [.text(code)]
+        let root = ScopeNode(children: [.text(code)])
         let tree = TokenTree(root: root, language: "plaintext")
         let output = renderer.render(tree)
 
@@ -445,8 +435,9 @@ public final class Highlight: @unchecked Sendable {
             }
 
             let word = String(text[matchRange])
-            let key = language.isCompiled && languages.values.first(where: { $0.caseInsensitive })?.caseInsensitive == true
-                ? word.lowercased() : word
+            // Check if any registered language uses case-insensitive matching
+            let useCaseInsensitive = languages.values.contains { $0.caseInsensitive }
+            let key = useCaseInsensitive ? word.lowercased() : word
 
             if let (scope, keywordRelevance) = keywords.keywords[key] {
                 let hits = keywordHits[key, default: 0] + 1
@@ -524,10 +515,9 @@ public final class Highlight: @unchecked Sendable {
         guard let newMode = match.rule else { return lexeme.count }
 
         // Check callbacks
-        let resp = ModeCallbackResponse()
         if let onBegin = newMode.onBegin {
-            onBegin(match.match, resp)
-            if resp.isMatchIgnored {
+            let result = onBegin(match.match)
+            if result == .ignoreMatch {
                 return doIgnore(lexeme: lexeme, matcher: top.matcher, modeBuffer: &modeBuffer, resumeScan: &resumeScan)
             }
         }
@@ -624,9 +614,8 @@ public final class Highlight: @unchecked Sendable {
 
         // Check callback
         if let onEnd = origin.onEnd {
-            let resp = ModeCallbackResponse()
-            onEnd(match.match, resp)
-            if resp.isMatchIgnored {
+            let result = onEnd(match.match)
+            if result == .ignoreMatch {
                 return nil
             }
         }

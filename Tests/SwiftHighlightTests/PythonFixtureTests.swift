@@ -6,16 +6,16 @@ final class PythonFixtureTests: XCTestCase {
 
     var hljs: Highlight!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         hljs = Highlight()
-        hljs.registerPython()
+        await hljs.registerPython()
     }
 
     // MARK: - Fixture Test Runner
 
     /// Runs a fixture test by comparing SwiftHighlight output to expected output
-    private func runFixture(_ name: String, file: StaticString = #file, line: UInt = #line) {
+    private func runFixture(_ name: String, file: StaticString = #file, line: UInt = #line) async {
         guard let inputURL = Bundle.module.url(forResource: name, withExtension: "txt", subdirectory: "Fixtures/python"),
               let expectedURL = Bundle.module.url(forResource: "\(name).expect", withExtension: "txt", subdirectory: "Fixtures/python") else {
             XCTFail("Could not find fixture files for '\(name)'", file: file, line: line)
@@ -28,7 +28,7 @@ final class PythonFixtureTests: XCTestCase {
             return
         }
 
-        let result = hljs.highlight(input, language: "python")
+        let result = await hljs.highlight(input, language: "python")
         let actual = result.value
 
         // Compare the outputs
@@ -59,7 +59,7 @@ final class PythonFixtureTests: XCTestCase {
     }
 
     /// Runs a fixture test and reports differences without failing (for development)
-    private func runFixtureReport(_ name: String) -> (passed: Bool, diff: String?) {
+    private func runFixtureReport(_ name: String) async -> (passed: Bool, diff: String?) {
         guard let inputURL = Bundle.module.url(forResource: name, withExtension: "txt", subdirectory: "Fixtures/python"),
               let expectedURL = Bundle.module.url(forResource: "\(name).expect", withExtension: "txt", subdirectory: "Fixtures/python") else {
             return (false, "Could not find fixture files")
@@ -70,7 +70,7 @@ final class PythonFixtureTests: XCTestCase {
             return (false, "Could not read fixture files")
         }
 
-        let result = hljs.highlight(input, language: "python")
+        let result = await hljs.highlight(input, language: "python")
         let actual = result.value
 
         if actual == expected {
@@ -98,71 +98,71 @@ final class PythonFixtureTests: XCTestCase {
 
     // MARK: - Individual Fixture Tests
 
-    func testKeywords() throws {
-        runFixture("keywords")
+    func testKeywords() async throws {
+        await runFixture("keywords")
     }
 
-    func testNumbers() throws {
-        runFixture("numbers")
+    func testNumbers() async throws {
+        await runFixture("numbers")
     }
 
-    func testClassSelf() throws {
-        runFixture("class_self")
+    func testClassSelf() async throws {
+        await runFixture("class_self")
     }
 
-    func testDecorators() throws {
-        runFixture("decorators")
+    func testDecorators() async throws {
+        await runFixture("decorators")
     }
 
-    func testFStrings() throws {
-        runFixture("f-strings")
+    func testFStrings() async throws {
+        await runFixture("f-strings")
     }
 
-    func testEscapedQuotes() throws {
-        runFixture("escaped-quotes")
+    func testEscapedQuotes() async throws {
+        await runFixture("escaped-quotes")
     }
 
-    func testFunctionHeader() throws {
-        runFixture("function-header")
+    func testFunctionHeader() async throws {
+        await runFixture("function-header")
     }
 
-    func testFunctionHeaderComments() throws {
-        runFixture("function-header-comments")
+    func testFunctionHeaderComments() async throws {
+        await runFixture("function-header-comments")
     }
 
-    func testIdentifiers() throws {
-        runFixture("identifiers")
+    func testIdentifiers() async throws {
+        await runFixture("identifiers")
     }
 
-    func testFalsePositives() throws {
-        runFixture("false_positives")
+    func testFalsePositives() async throws {
+        await runFixture("false_positives")
     }
 
-    func testDiacriticIdentifiers() throws {
-        runFixture("diacritic_identifiers")
+    func testDiacriticIdentifiers() async throws {
+        await runFixture("diacritic_identifiers")
     }
 
-    func testMatrixMultiplication() throws {
-        runFixture("matrix-multiplication")
+    func testMatrixMultiplication() async throws {
+        await runFixture("matrix-multiplication")
     }
 
     // MARK: - Debug Test
 
-    func testDebugFunctionDef() throws {
+    func testDebugFunctionDef() async throws {
         // Test simple keyword first
         let code0 = "def"
-        let result0 = hljs.highlight(code0, language: "python")
+        let result0 = await hljs.highlight(code0, language: "python")
         print("DEBUG0: Input: \(code0)")
         print("DEBUG0: Output: \(result0.value)")
 
         // Test def with function name
         let code1 = "def foo"
-        let result1 = hljs.highlight(code1, language: "python")
+        let result1 = await hljs.highlight(code1, language: "python")
         print("DEBUG1: Input: \(code1)")
         print("DEBUG1: Output: \(result1.value)")
 
         let code = "def f(x):"
-        let result = hljs.highlight(code, language: "python")
+        let result = await hljs.highlight(code, language: "python")
         print("DEBUG: Input: \(code)")
         print("DEBUG: Output: \(result.value)")
 
@@ -170,104 +170,103 @@ final class PythonFixtureTests: XCTestCase {
         XCTAssertTrue(result.value.contains("hljs-keyword") || result.value.contains("def"), "Should have keyword")
     }
 
-    func testDebugEscapedQuotes() throws {
+    func testDebugEscapedQuotes() async throws {
         // Test simple triple-quoted string first
         let code1 = "'''hello'''"
-        let result1 = hljs.highlight(code1, language: "python")
+        let result1 = await hljs.highlight(code1, language: "python")
         print("ESC1: Input: \(code1)")
         print("ESC1: Output: \(result1.value)")
 
         // Test with escaped quote
         let code2 = "'''text \\''' text'''"
-        let result2 = hljs.highlight(code2, language: "python")
+        let result2 = await hljs.highlight(code2, language: "python")
         print("ESC2: Input: \(code2)")
         print("ESC2: Output: \(result2.value)")
 
         // Test simple single-quoted string with escape
         let code3 = "'text \\' text'"
-        let result3 = hljs.highlight(code3, language: "python")
+        let result3 = await hljs.highlight(code3, language: "python")
         print("ESC3: Input: \(code3)")
         print("ESC3: Output: \(result3.value)")
 
         // Test backslash escape mode directly
         let code4 = "'''\\''''"
-        let result4 = hljs.highlight(code4, language: "python")
+        let result4 = await hljs.highlight(code4, language: "python")
         print("ESC4: Input: \(code4)")
         print("ESC4: Output: \(result4.value)")
 
         // Test using a custom minimal language to isolate the issue
         let customHL = Highlight()
-        customHL.registerLanguage("test") { hljs in
-            let lang = Language(name: "test")
-
+        await customHL.registerLanguage("test") { hljs in
             // Backslash escape mode
             let escape = Mode(begin: #"\\[\s\S]"#, relevance: 0)
 
             // Triple-quoted string
-            let tripleString = Mode(scope: "string")
-            tripleString.begin = .string("'''")
-            tripleString.end = .string("'''")
-            tripleString.contains = [.mode(escape)]
+            let tripleString = Mode(
+                scope: "string",
+                begin: .string("'''"),
+                end: .string("'''"),
+                contains: [.mode(escape)]
+            )
 
-            lang.contains = [.mode(tripleString)]
-            return lang
+            return Language(name: "test", contains: [.mode(tripleString)])
         }
 
         let testCode = "'''text \\''' text'''"
-        let testResult = customHL.highlight(testCode, language: "test")
+        let testResult = await customHL.highlight(testCode, language: "test")
         print("CUSTOM: Input: \(testCode)")
         print("CUSTOM: Output: \(testResult.value)")
 
         // Debug test with logging
         print("\n=== DEBUG TRACE ===")
-        customHL.registerLanguage("test-debug") { hljs in
-            let lang = Language(name: "test-debug")
+        await customHL.registerLanguage("test-debug") { hljs in
             let escape = Mode(begin: #"\\[\s\S]"#, relevance: 0)
-            let tripleString = Mode(scope: "string")
-            tripleString.begin = .string("'''")
-            tripleString.end = .string("'''")
-            tripleString.contains = [.mode(escape)]
-            lang.contains = [.mode(tripleString)]
-            return lang
+            let tripleString = Mode(
+                scope: "string",
+                begin: .string("'''"),
+                end: .string("'''"),
+                contains: [.mode(escape)]
+            )
+            return Language(name: "test-debug", contains: [.mode(tripleString)])
         }
-        let debugResult = customHL.highlight(testCode, language: "test-debug")
+        let debugResult = await customHL.highlight(testCode, language: "test-debug")
         print("DEBUG: Final output: \(debugResult.value)")
     }
 
-    func testDebugDecorator() throws {
+    func testDebugDecorator() async throws {
         // Test simple decorator
         let code1 = "@foo"
-        let result1 = hljs.highlight(code1, language: "python")
+        let result1 = await hljs.highlight(code1, language: "python")
         print("DEC1: Input: \(code1)")
         print("DEC1: Output: \(result1.value)")
 
         // Test decorator with empty params
         let code0 = "@foo()"
-        let result0 = hljs.highlight(code0, language: "python")
+        let result0 = await hljs.highlight(code0, language: "python")
         print("DEC0: Input: \(code0)")
         print("DEC0: Output: \(result0.value)")
 
         // Test decorator with params - simpler case
         let code2a = "@foo(3)"
-        let result2a = hljs.highlight(code2a, language: "python")
+        let result2a = await hljs.highlight(code2a, language: "python")
         print("DEC2a: Input: \(code2a)")
         print("DEC2a: Output: \(result2a.value)")
 
         // Test decorator with string params
         let code2 = "@foo(\"bar\")"
-        let result2 = hljs.highlight(code2, language: "python")
+        let result2 = await hljs.highlight(code2, language: "python")
         print("DEC2: Input: \(code2)")
         print("DEC2: Output: \(result2.value)")
 
         // Test decorator with newline
         let code3 = "@foo(\"bar\")\ndef test():"
-        let result3 = hljs.highlight(code3, language: "python")
+        let result3 = await hljs.highlight(code3, language: "python")
         print("DEC3: Input: \(code3)")
         print("DEC3: Output: \(result3.value)")
 
         // Test function params for comparison
         let code4 = "def foo(x):"
-        let result4 = hljs.highlight(code4, language: "python")
+        let result4 = await hljs.highlight(code4, language: "python")
         print("DEC4: Input: \(code4)")
         print("DEC4: Output: \(result4.value)")
 
@@ -348,59 +347,65 @@ final class PythonFixtureTests: XCTestCase {
         return re.numberOfCaptureGroups
     }
 
-    func testMinimalDecorator() throws {
+    func testMinimalDecorator() async throws {
         // Create a minimal custom language with decorator-like params
         let testLang = Highlight()
 
         // Test 1: With excludeEnd
-        testLang.registerLanguage("test1") { hljs in
-            let lang = Language(name: "test1")
+        await testLang.registerLanguage("test1") { hljs in
+            let params = Mode(
+                scope: "params",
+                begin: .string("\\("),
+                end: .string("\\)"),
+                excludeEnd: true
+            )
 
-            let params = Mode(scope: "params")
-            params.begin = .string("\\(")
-            params.end = .string("\\)")
-            params.excludeEnd = true
+            let wrapper = Mode(
+                scope: "meta",
+                begin: .string("@"),
+                end: .string("$"),
+                contains: [.mode(params)]
+            )
 
-            let wrapper = Mode(scope: "meta")
-            wrapper.begin = .string("@")
-            wrapper.end = .string("$")
-            wrapper.contains = [.mode(params)]
-
-            lang.contains = [.mode(wrapper)]
-            return lang
+            return Language(name: "test1", contains: [.mode(wrapper)])
         }
 
         // Test 2: Without excludeEnd
-        testLang.registerLanguage("test2") { hljs in
-            let lang = Language(name: "test2")
+        await testLang.registerLanguage("test2") { hljs in
+            let params = Mode(
+                scope: "params",
+                begin: .string("\\("),
+                end: .string("\\)")
+                // No excludeEnd
+            )
 
-            let params = Mode(scope: "params")
-            params.begin = .string("\\(")
-            params.end = .string("\\)")
-            // No excludeEnd
+            let wrapper = Mode(
+                scope: "meta",
+                begin: .string("@"),
+                end: .string("$"),
+                contains: [.mode(params)]
+            )
 
-            let wrapper = Mode(scope: "meta")
-            wrapper.begin = .string("@")
-            wrapper.end = .string("$")
-            wrapper.contains = [.mode(params)]
-
-            lang.contains = [.mode(wrapper)]
-            return lang
+            return Language(name: "test2", contains: [.mode(wrapper)])
         }
 
         print("=== With excludeEnd=true ===")
-        print("@foo(): \(testLang.highlight("@foo()", language: "test1").value)")
-        print("@foo(x): \(testLang.highlight("@foo(x)", language: "test1").value)")
+        let r1 = await testLang.highlight("@foo()", language: "test1")
+        print("@foo(): \(r1.value)")
+        let r2 = await testLang.highlight("@foo(x)", language: "test1")
+        print("@foo(x): \(r2.value)")
 
         print("\n=== Without excludeEnd ===")
-        print("@foo(): \(testLang.highlight("@foo()", language: "test2").value)")
-        print("@foo(x): \(testLang.highlight("@foo(x)", language: "test2").value)")
+        let r3 = await testLang.highlight("@foo()", language: "test2")
+        print("@foo(): \(r3.value)")
+        let r4 = await testLang.highlight("@foo(x)", language: "test2")
+        print("@foo(x): \(r4.value)")
     }
 
     // MARK: - Summary Test
 
     /// Runs all fixtures and prints a summary report
-    func testAllFixturesSummary() throws {
+    func testAllFixturesSummary() async throws {
         let fixtures = [
             "keywords",
             "numbers",
@@ -421,7 +426,7 @@ final class PythonFixtureTests: XCTestCase {
         var report = "\n=== Python Fixture Test Summary ===\n"
 
         for fixture in fixtures {
-            let (success, diff) = runFixtureReport(fixture)
+            let (success, diff) = await runFixtureReport(fixture)
             if success {
                 passed += 1
                 report += "✅ \(fixture)\n"

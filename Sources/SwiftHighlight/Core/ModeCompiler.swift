@@ -38,8 +38,6 @@ internal final class CompiledMode {
     var onEnd: ModeCallback?
     var beforeBegin: ModeCallback?
 
-    var isCompiled = false
-
     init() {}
 }
 
@@ -57,8 +55,11 @@ internal final class ModeCompiler {
     private let caseInsensitive: Bool
     private let unicode: Bool
 
-    /// Track modes currently being compiled to detect cycles
-    private var compilingModes: Set<ObjectIdentifier> = []
+    /// Track modes currently being compiled to detect cycles (using UUID)
+    private var compilingModes: Set<UUID> = []
+
+    /// Cache of compiled modes by UUID
+    private var modeCache: [UUID: CompiledMode] = [:]
 
     /// Maximum recursion depth to prevent stack overflow
     private let maxDepth = 50
@@ -74,12 +75,11 @@ internal final class ModeCompiler {
     }
 
     private func languageToMode(_ lang: Language) -> Mode {
-        let mode = Mode()
-        mode.scope = nil
-        mode.keywords = lang.keywords
-        mode.illegal = lang.illegal
-        mode.contains = lang.contains
-        return mode
+        Mode(
+            keywords: lang.keywords,
+            illegal: lang.illegal,
+            contains: lang.contains
+        )
     }
 
     private func langRe(_ pattern: RegexPattern?, global: Bool = false) -> NSRegularExpression? {
@@ -101,66 +101,64 @@ internal final class ModeCompiler {
         // Recursion depth check
         guard depth < maxDepth else {
             // Return a minimal compiled mode to prevent stack overflow
-            let cmode = CompiledMode()
-            cmode.isCompiled = true
-            return cmode
+            return CompiledMode()
         }
 
         // Check if already compiled (reuse cached result)
-        if mode.isCompiled, let cached = mode.cachedCompiledMode {
+        if let cached = modeCache[mode.id] {
             return cached
         }
 
         // Detect cycles - if we're already compiling this exact mode instance, return a placeholder
-        let modeId = ObjectIdentifier(mode)
-        if compilingModes.contains(modeId) {
-            let cmode = CompiledMode()
-            cmode.isCompiled = true
-            return cmode
+        if compilingModes.contains(mode.id) {
+            return CompiledMode()
         }
 
         // Mark as being compiled
-        compilingModes.insert(modeId)
-        defer { compilingModes.remove(modeId) }
+        compilingModes.insert(mode.id)
+        defer { compilingModes.remove(mode.id) }
 
         let cmode = CompiledMode()
 
         // Cache early so .self references can find it
-        mode.cachedCompiledMode = cmode
+        modeCache[mode.id] = cmode
 
         if mode.scope != nil || mode.className != nil {
             cmode.scope = mode.scope ?? mode.className
         }
 
-        // Handle match -> begin conversion
-        if let match = mode.match {
-            mode.begin = match
-        }
-
-        // Handle beginKeywords
-        if let beginKeywords = mode.beginKeywords {
-            let words = beginKeywords.split(separator: " ").map { String($0) }
-            let pattern = "\\b(" + words.joined(separator: "|") + ")\\b"
-            mode.begin = .string(pattern)
-        }
+        // Compute effective begin pattern (handle match -> begin and beginKeywords)
+        let effectiveBegin: RegexPattern? = {
+            if let match = mode.match {
+                return match
+            }
+            if let beginKeywords = mode.beginKeywords {
+                let words = beginKeywords.split(separator: " ").map { String($0) }
+                let pattern = "\\b(" + words.joined(separator: "|") + ")\\b"
+                return .string(pattern)
+            }
+            return mode.begin
+        }()
 
         // Compile begin/end patterns
         if parent != nil {
-            if mode.begin == nil {
-                mode.begin = .string(#"\B|\b"#)
-            }
-            cmode.beginRe = langRe(mode.begin)
+            let beginPattern = effectiveBegin ?? .string(#"\B|\b"#)
+            cmode.beginRe = langRe(beginPattern)
 
+            let effectiveEnd: RegexPattern?
             if mode.end == nil && !mode.endsWithParent {
-                mode.end = .string(#"\B|\b"#)
+                effectiveEnd = .string(#"\B|\b"#)
+            } else {
+                effectiveEnd = mode.end
             }
-            if let end = mode.end {
+
+            if let end = effectiveEnd {
                 cmode.endRe = langRe(end)
             }
 
-            cmode.terminatorEnd = mode.end?.source ?? ""
+            cmode.terminatorEnd = effectiveEnd?.source ?? ""
             if mode.endsWithParent, let parentEnd = parent?.terminatorEnd {
-                cmode.terminatorEnd += (mode.end != nil ? "|" : "") + parentEnd
+                cmode.terminatorEnd += (effectiveEnd != nil ? "|" : "") + parentEnd
             }
         }
 
@@ -203,8 +201,8 @@ internal final class ModeCompiler {
         // Expand variants
         var containsModes: [Mode] = []
         if let variants = mode.variants {
-            for variant in variants {
-                let merged = mergeMode(mode, variant)
+            for variantBox in variants {
+                let merged = mergeMode(mode, variantBox.value)
                 containsModes.append(contentsOf: expandContains(merged.contains, selfMode: effectiveSelfMode))
             }
         } else {
@@ -219,15 +217,13 @@ internal final class ModeCompiler {
         }
 
         // Compile starts
-        if let starts = mode.starts {
-            cmode.starts = compileMode(starts, parent: parent, depth: depth + 1, selfMode: effectiveSelfMode)
+        if let startsBox = mode.starts {
+            cmode.starts = compileMode(startsBox.value, parent: parent, depth: depth + 1, selfMode: effectiveSelfMode)
         }
 
         // Build matcher
         cmode.matcher = buildModeRegex(cmode)
 
-        cmode.isCompiled = true
-        mode.isCompiled = true
         return cmode
     }
 
@@ -253,35 +249,36 @@ internal final class ModeCompiler {
             case .self:
                 // Create a shallow wrapper that refers to selfMode but WITHOUT .self in contains
                 // This breaks the infinite recursion
-                let selfCopy = Mode()
-                selfCopy.scope = selfMode.scope
-                selfCopy.className = selfMode.className
-                selfCopy.begin = selfMode.begin
-                selfCopy.end = selfMode.end
-                selfCopy.match = selfMode.match
-                selfCopy.keywords = selfMode.keywords
-                selfCopy.illegal = selfMode.illegal
-                // Important: do NOT copy contains - leave empty to prevent recursion
-                // The actual content will be inherited from parent context
-                selfCopy.relevance = selfMode.relevance
-                selfCopy.excludeBegin = selfMode.excludeBegin
-                selfCopy.excludeEnd = selfMode.excludeEnd
-                selfCopy.returnBegin = selfMode.returnBegin
-                selfCopy.returnEnd = selfMode.returnEnd
-                selfCopy.endsWithParent = true  // .self references should end with parent
-                selfCopy.endsParent = selfMode.endsParent
-                selfCopy.skip = selfMode.skip
-                selfCopy.subLanguage = selfMode.subLanguage
-                selfCopy.beginScope = selfMode.beginScope
-                selfCopy.endScope = selfMode.endScope
-                selfCopy.onBegin = selfMode.onBegin
-                selfCopy.onEnd = selfMode.onEnd
-                selfCopy.beginKeywords = selfMode.beginKeywords
+                let selfCopy = Mode(
+                    scope: selfMode.scope,
+                    className: selfMode.className,
+                    begin: selfMode.begin,
+                    end: selfMode.end,
+                    match: selfMode.match,
+                    keywords: selfMode.keywords,
+                    illegal: selfMode.illegal,
+                    contains: [],  // Important: do NOT copy contains - leave empty to prevent recursion
+                    relevance: selfMode.relevance,
+                    excludeBegin: selfMode.excludeBegin,
+                    excludeEnd: selfMode.excludeEnd,
+                    returnBegin: selfMode.returnBegin,
+                    returnEnd: selfMode.returnEnd,
+                    endsWithParent: true,  // .self references should end with parent
+                    endsParent: selfMode.endsParent,
+                    skip: selfMode.skip,
+                    subLanguage: selfMode.subLanguage,
+                    beginScope: selfMode.beginScope,
+                    endScope: selfMode.endScope,
+                    onBegin: selfMode.onBegin,
+                    onEnd: selfMode.onEnd,
+                    beginKeywords: selfMode.beginKeywords
+                )
                 result.append(selfCopy)
-            case .mode(let m):
+            case .mode(let mBox):
+                let m = mBox.value
                 if let variants = m.variants {
-                    for variant in variants {
-                        result.append(mergeMode(m, variant))
+                    for variantBox in variants {
+                        result.append(mergeMode(m, variantBox.value))
                     }
                 } else {
                     result.append(m)
@@ -292,21 +289,32 @@ internal final class ModeCompiler {
     }
 
     private func mergeMode(_ base: Mode, _ override: Mode) -> Mode {
-        let merged = base.copy()
-        if let scope = override.scope { merged.scope = scope }
-        if let begin = override.begin { merged.begin = begin }
-        if let end = override.end { merged.end = end }
-        if let keywords = override.keywords { merged.keywords = keywords }
-        if let relevance = override.relevance { merged.relevance = relevance }
-        merged.excludeBegin = override.excludeBegin || base.excludeBegin
-        merged.excludeEnd = override.excludeEnd || base.excludeEnd
-        merged.returnBegin = override.returnBegin || base.returnBegin
-        merged.returnEnd = override.returnEnd || base.returnEnd
-        merged.endsWithParent = override.endsWithParent || base.endsWithParent
-        merged.endsParent = override.endsParent || base.endsParent
-        merged.skip = override.skip || base.skip
-        if !override.contains.isEmpty { merged.contains = override.contains }
-        return merged
+        Mode(
+            scope: override.scope ?? base.scope,
+            className: override.className ?? base.className,
+            begin: override.begin ?? base.begin,
+            end: override.end ?? base.end,
+            match: override.match ?? base.match,
+            keywords: override.keywords ?? base.keywords,
+            illegal: override.illegal ?? base.illegal,
+            contains: override.contains.isEmpty ? base.contains : override.contains,
+            variants: nil,  // Variants are expanded, so no longer needed
+            relevance: override.relevance ?? base.relevance,
+            excludeBegin: override.excludeBegin || base.excludeBegin,
+            excludeEnd: override.excludeEnd || base.excludeEnd,
+            returnBegin: override.returnBegin || base.returnBegin,
+            returnEnd: override.returnEnd || base.returnEnd,
+            endsWithParent: override.endsWithParent || base.endsWithParent,
+            endsParent: override.endsParent || base.endsParent,
+            skip: override.skip || base.skip,
+            subLanguage: override.subLanguage ?? base.subLanguage,
+            beginScope: override.beginScope ?? base.beginScope,
+            endScope: override.endScope ?? base.endScope,
+            starts: override.starts ?? base.starts,
+            onBegin: override.onBegin ?? base.onBegin,
+            onEnd: override.onEnd ?? base.onEnd,
+            beginKeywords: override.beginKeywords ?? base.beginKeywords
+        )
     }
 
     private func compileKeywords(_ keywords: Keywords) -> CompiledKeywords? {

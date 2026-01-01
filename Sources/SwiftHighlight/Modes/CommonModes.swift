@@ -31,14 +31,22 @@ extension Highlight {
 
     /// Creates a comment mode
     public static func comment(begin: RegexPattern, end: RegexPattern, relevance: Int? = nil) -> Mode {
-        let mode = Mode(scope: "comment", begin: begin, end: end, relevance: relevance)
+        // Doctag highlighting
+        let doctag = Mode(
+            scope: "doctag",
+            begin: .string(#"(?=TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX)"#),
+            end: .string(#"(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):"#),
+            relevance: 0,
+            excludeBegin: true
+        )
 
-        // Add doctag highlighting
-        let doctag = Mode(scope: "doctag", begin: .string(#"(?=TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX)"#), end: .string(#"(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):"#), relevance: 0)
-        doctag.excludeBegin = true
-        mode.contains = [.mode(doctag)]
-
-        return mode
+        return Mode(
+            scope: "comment",
+            begin: begin,
+            end: end,
+            contains: [.mode(doctag)],
+            relevance: relevance
+        )
     }
 
     /// C-style line comment //
@@ -116,20 +124,18 @@ extension Highlight {
             beginPattern = Regex.concat(#"^#![ ]*/"#, ".*\\b", binary, "\\b.*")
         }
 
-        let mode = Mode(
+        return Mode(
             scope: "meta",
             begin: .string(beginPattern),
             end: "$",
-            relevance: 0
-        )
-
-        // Only match at start of file
-        mode.onBegin = { match, resp in
-            if match.range.location != 0 {
-                resp.ignoreMatch()
+            relevance: 0,
+            // Only match at start of file
+            onBegin: { match in
+                if match.range.location != 0 {
+                    return .ignoreMatch
+                }
+                return .continue
             }
-        }
-
-        return mode
+        )
     }
 }

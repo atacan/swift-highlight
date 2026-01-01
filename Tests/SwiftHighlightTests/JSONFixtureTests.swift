@@ -6,16 +6,16 @@ final class JSONFixtureTests: XCTestCase {
 
     var hljs: Highlight!
 
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
         hljs = Highlight()
-        hljs.registerJSON()
+        await hljs.registerJSON()
     }
 
     // MARK: - Fixture Test Runner
 
     /// Runs a fixture test by comparing SwiftHighlight output to expected output
-    private func runFixture(_ name: String, file: StaticString = #file, line: UInt = #line) {
+    private func runFixture(_ name: String, file: StaticString = #file, line: UInt = #line) async {
         guard let inputURL = Bundle.module.url(forResource: name, withExtension: "txt", subdirectory: "Fixtures/json"),
               let expectedURL = Bundle.module.url(forResource: "\(name).expect", withExtension: "txt", subdirectory: "Fixtures/json") else {
             XCTFail("Could not find fixture files for '\(name)'", file: file, line: line)
@@ -28,7 +28,7 @@ final class JSONFixtureTests: XCTestCase {
             return
         }
 
-        let result = hljs.highlight(input, language: "json")
+        let result = await hljs.highlight(input, language: "json")
         let actual = result.value
 
         // Compare the outputs
@@ -59,7 +59,7 @@ final class JSONFixtureTests: XCTestCase {
     }
 
     /// Runs a fixture test and reports differences without failing (for development)
-    private func runFixtureReport(_ name: String) -> (passed: Bool, diff: String?) {
+    private func runFixtureReport(_ name: String) async -> (passed: Bool, diff: String?) {
         guard let inputURL = Bundle.module.url(forResource: name, withExtension: "txt", subdirectory: "Fixtures/json"),
               let expectedURL = Bundle.module.url(forResource: "\(name).expect", withExtension: "txt", subdirectory: "Fixtures/json") else {
             return (false, "Could not find fixture files")
@@ -70,7 +70,7 @@ final class JSONFixtureTests: XCTestCase {
             return (false, "Could not read fixture files")
         }
 
-        let result = hljs.highlight(input, language: "json")
+        let result = await hljs.highlight(input, language: "json")
         let actual = result.value
 
         if actual == expected {
@@ -98,18 +98,18 @@ final class JSONFixtureTests: XCTestCase {
 
     // MARK: - Individual Fixture Tests
 
-    func testComments() throws {
-        runFixture("comments")
+    func testComments() async throws {
+        await runFixture("comments")
     }
 
-    func testJSON5() throws {
-        runFixture("json5")
+    func testJSON5() async throws {
+        await runFixture("json5")
     }
 
     // MARK: - Summary Test
 
     /// Runs all fixtures and prints a summary report
-    func testAllFixturesSummary() throws {
+    func testAllFixturesSummary() async throws {
         let fixtures = [
             "comments",
             "json5"
@@ -120,7 +120,7 @@ final class JSONFixtureTests: XCTestCase {
         var report = "\n=== JSON Fixture Test Summary ===\n"
 
         for fixture in fixtures {
-            let (success, diff) = runFixtureReport(fixture)
+            let (success, diff) = await runFixtureReport(fixture)
             if success {
                 passed += 1
                 report += "PASS \(fixture)\n"

@@ -1,7 +1,7 @@
 import Foundation
 
 /// A node in the token tree representing parsed code structure.
-public enum TokenNode: Sendable {
+public enum TokenNode: Sendable, Hashable {
     /// Plain text content
     case text(String)
     /// A scoped node containing children with semantic meaning
@@ -10,13 +10,13 @@ public enum TokenNode: Sendable {
 
 /// A scope node containing children with optional scope and language.
 /// Scopes represent semantic categories like "keyword", "string", "comment", etc.
-public final class ScopeNode: @unchecked Sendable {
+public struct ScopeNode: Sendable, Hashable {
     /// The scope name (e.g., "keyword", "string", "comment")
-    public internal(set) var scope: String?
+    public let scope: String?
     /// The language name for sub-language embedding
-    public internal(set) var language: String?
+    public let language: String?
     /// Child nodes
-    public internal(set) var children: [TokenNode] = []
+    public let children: [TokenNode]
 
     public init(scope: String? = nil, language: String? = nil, children: [TokenNode] = []) {
         self.scope = scope
@@ -27,7 +27,7 @@ public final class ScopeNode: @unchecked Sendable {
 
 /// A wrapper for the token tree root with associated language.
 /// Use this for custom rendering of highlighted code.
-public struct TokenTree: Sendable {
+public struct TokenTree: Sendable, Hashable {
     /// The root node of the token tree
     public let root: ScopeNode
     /// The language used for highlighting
@@ -39,20 +39,58 @@ public struct TokenTree: Sendable {
     }
 }
 
+// MARK: - Internal Builder
+
+/// Internal mutable node used during tree construction
+private final class MutableScopeNode {
+    var scope: String?
+    var language: String?
+    var children: [MutableTokenNode] = []
+
+    init(scope: String? = nil, language: String? = nil) {
+        self.scope = scope
+        self.language = language
+    }
+
+    /// Converts to immutable ScopeNode
+    func freeze() -> ScopeNode {
+        ScopeNode(
+            scope: scope,
+            language: language,
+            children: children.map { $0.freeze() }
+        )
+    }
+}
+
+/// Internal mutable token node used during tree construction
+private enum MutableTokenNode {
+    case text(String)
+    case scope(MutableScopeNode)
+
+    func freeze() -> TokenNode {
+        switch self {
+        case .text(let s):
+            return .text(s)
+        case .scope(let node):
+            return .scope(node.freeze())
+        }
+    }
+}
+
 /// Token tree emitter - builds a tree structure during parsing
 internal final class TokenTreeEmitter {
-    private var rootNode = ScopeNode()
-    private var stack: [ScopeNode] = []
+    private var rootNode = MutableScopeNode()
+    private var stack: [MutableScopeNode] = []
     private let options: HighlightOptions
 
-    var root: ScopeNode { rootNode }
+    var root: ScopeNode { rootNode.freeze() }
 
     init(options: HighlightOptions) {
         self.options = options
         stack = [rootNode]
     }
 
-    private var top: ScopeNode {
+    private var top: MutableScopeNode {
         stack.last ?? rootNode
     }
 
@@ -64,7 +102,7 @@ internal final class TokenTreeEmitter {
 
     /// Opens a new scope
     func openNode(_ scope: String) {
-        let node = ScopeNode(scope: scope)
+        let node = MutableScopeNode(scope: scope)
         top.children.append(.scope(node))
         stack.append(node)
     }
@@ -79,9 +117,15 @@ internal final class TokenTreeEmitter {
         closeNode()
     }
 
-    /// Closes the current node
+    /// Closes the current node (discards return value externally)
+    func closeNode() {
+        guard stack.count > 1 else { return }
+        _ = stack.removeLast()
+    }
+
+    /// Internal version that returns the node
     @discardableResult
-    func closeNode() -> ScopeNode? {
+    private func closeNodeInternal() -> MutableScopeNode? {
         guard stack.count > 1 else { return nil }
         return stack.removeLast()
     }
@@ -89,16 +133,14 @@ internal final class TokenTreeEmitter {
     /// Closes all open nodes
     func closeAllNodes() {
         while stack.count > 1 {
-            _ = closeNode()
+            closeNode()
         }
     }
 
     /// Adds a sublanguage result
     func addSublanguage(_ emitter: TokenTreeEmitter, name: String?) {
-        let node = emitter.root
-        if let name = name {
-            node.scope = "language:\(name)"
-        }
+        let node = MutableScopeNode(scope: name.map { "language:\($0)" })
+        node.children = emitter.rootNode.children
         top.children.append(.scope(node))
     }
 
@@ -109,7 +151,7 @@ internal final class TokenTreeEmitter {
 
     /// Renders the tree to HTML using the public HTMLRenderer
     func toHTML() -> String {
-        let tree = TokenTree(root: rootNode, language: "")
+        let tree = TokenTree(root: rootNode.freeze(), language: "")
         let renderer = HTMLRenderer(theme: HTMLTheme(classPrefix: options.classPrefix))
         return renderer.render(tree)
     }

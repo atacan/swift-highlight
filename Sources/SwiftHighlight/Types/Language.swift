@@ -1,52 +1,70 @@
 import Foundation
 
 /// A language definition for syntax highlighting.
-public final class Language: @unchecked Sendable {
+public struct Language: Sendable, Hashable {
+    /// Unique identifier for this language instance
+    public let id: UUID
+
     /// Display name of the language
-    public var name: String
+    public let name: String
 
     /// Alternative names/aliases for this language
-    public var aliases: [String]?
+    public let aliases: [String]
 
     /// Whether to disable auto-detection for this language
-    public var disableAutodetect: Bool
+    public let disableAutodetect: Bool
 
     /// Case insensitive matching
-    public var caseInsensitive: Bool
+    public let caseInsensitive: Bool
 
     /// Enable Unicode regex support
-    public var unicodeRegex: Bool
+    public let unicodeRegex: Bool
 
     /// Keywords definition
-    public var keywords: Keywords?
+    public let keywords: Keywords?
 
     /// Illegal patterns (cause highlighting to abort)
-    public var illegal: RegexPattern?
+    public let illegal: RegexPattern?
 
     /// Child modes
-    public var contains: [ModeReference]
+    public let contains: [ModeReference]
 
     /// Class name aliases (e.g., "built_in" -> "builtin")
-    public var classNameAliases: [String: String]
+    public let classNameAliases: [String: String]
 
-    /// Compiler extensions (advanced)
-    internal var compilerExtensions: [(Mode, Mode?) -> Void] = []
-
-    /// The raw definition function (for re-registration)
-    internal var rawDefinition: ((Highlight) -> Language)?
-
-    public init(name: String) {
+    public init(
+        name: String,
+        aliases: [String] = [],
+        disableAutodetect: Bool = false,
+        caseInsensitive: Bool = false,
+        unicodeRegex: Bool = false,
+        keywords: Keywords? = nil,
+        illegal: RegexPattern? = nil,
+        contains: [ModeReference] = [],
+        classNameAliases: [String: String] = [:]
+    ) {
+        self.id = UUID()
         self.name = name
-        self.aliases = nil
-        self.disableAutodetect = false
-        self.caseInsensitive = false
-        self.unicodeRegex = false
-        self.keywords = nil
-        self.illegal = nil
-        self.contains = []
-        self.classNameAliases = [:]
+        self.aliases = aliases
+        self.disableAutodetect = disableAutodetect
+        self.caseInsensitive = caseInsensitive
+        self.unicodeRegex = unicodeRegex
+        self.keywords = keywords
+        self.illegal = illegal
+        self.contains = contains
+        self.classNameAliases = classNameAliases
+    }
+
+    // MARK: - Hashable
+
+    public static func == (lhs: Language, rhs: Language) -> Bool {
+        lhs.id == rhs.id
+    }
+
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
     }
 }
 
 /// Type for language definition functions
-public typealias LanguageDefinition = @Sendable (Highlight) -> Language
+public typealias LanguageDefinition = @Sendable (Highlight) async -> Language
