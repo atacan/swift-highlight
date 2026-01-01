@@ -425,9 +425,14 @@ public actor Highlight {
         var lastIndex = text.startIndex
         let range = NSRange(text.startIndex..., in: text)
 
-        patternRe.enumerateMatches(in: text, options: [], range: range) { result, _, _ in
-            guard let result = result,
-                  let matchRange = Range(result.range, in: text) else { return }
+        // Use matches(in:range:) instead of enumerateMatches to avoid closure capture issues
+        let matches = patternRe.matches(in: text, options: [], range: range)
+
+        // Check case-insensitivity once before the loop
+        let useCaseInsensitive = languages.values.contains { $0.caseInsensitive }
+
+        for result in matches {
+            guard let matchRange = Range(result.range, in: text) else { continue }
 
             // Add text before keyword
             if matchRange.lowerBound > lastIndex {
@@ -435,8 +440,6 @@ public actor Highlight {
             }
 
             let word = String(text[matchRange])
-            // Check if any registered language uses case-insensitive matching
-            let useCaseInsensitive = languages.values.contains { $0.caseInsensitive }
             let key = useCaseInsensitive ? word.lowercased() : word
 
             if let (scope, keywordRelevance) = keywords.keywords[key] {
