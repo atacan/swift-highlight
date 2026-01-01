@@ -309,7 +309,7 @@ internal final class ModeCompiler {
         return merged
     }
 
-    private func compileKeywords(_ keywords: Keywords) -> CompiledKeywords {
+    private func compileKeywords(_ keywords: Keywords) -> CompiledKeywords? {
         var compiled: [String: (scope: String, relevance: Int)] = [:]
 
         func addKeywords(_ words: [String], scope: String) {
@@ -331,7 +331,9 @@ internal final class ModeCompiler {
         }
 
         let pattern = keywords.pattern?.source ?? #"\w+"#
-        let patternRe = langRe(pattern, global: true)!
+        guard let patternRe = langRe(pattern, global: true) else {
+            return nil
+        }
 
         return CompiledKeywords(pattern: patternRe, keywords: compiled)
     }

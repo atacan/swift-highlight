@@ -61,23 +61,24 @@ public struct HTMLRenderer: TokenRenderer {
             buffer += escapeHTML(text)
 
         case .scope(let scopeNode):
-            let hasScope = scopeNode.scope != nil && !isRoot
-            // Skip empty scope nodes (e.g., empty params)
-            if hasScope && scopeNode.children.isEmpty {
-                return
-            }
+            if let scope = scopeNode.scope, !isRoot {
+                // Skip empty scope nodes (e.g., empty params)
+                if scopeNode.children.isEmpty {
+                    return
+                }
 
-            if hasScope {
-                let className = theme.cssClass(for: scopeNode.scope!)
+                let className = theme.cssClass(for: scope)
                 buffer += "<span class=\"\(className)\">"
-            }
 
-            for child in scopeNode.children {
-                renderNode(child, to: &buffer)
-            }
+                for child in scopeNode.children {
+                    renderNode(child, to: &buffer)
+                }
 
-            if hasScope {
                 buffer += "</span>"
+            } else {
+                for child in scopeNode.children {
+                    renderNode(child, to: &buffer)
+                }
             }
         }
     }

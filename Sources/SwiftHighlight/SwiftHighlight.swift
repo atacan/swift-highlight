@@ -436,8 +436,8 @@ public final class Highlight: @unchecked Sendable {
         let range = NSRange(text.startIndex..., in: text)
 
         patternRe.enumerateMatches(in: text, options: [], range: range) { result, _, _ in
-            guard let result = result else { return }
-            let matchRange = Range(result.range, in: text)!
+            guard let result = result,
+                  let matchRange = Range(result.range, in: text) else { return }
 
             // Add text before keyword
             if matchRange.lowerBound > lastIndex {
@@ -449,8 +449,9 @@ public final class Highlight: @unchecked Sendable {
                 ? word.lowercased() : word
 
             if let (scope, keywordRelevance) = keywords.keywords[key] {
-                keywordHits[key, default: 0] += 1
-                if keywordHits[key]! <= maxKeywordHits {
+                let hits = keywordHits[key, default: 0] + 1
+                keywordHits[key] = hits
+                if hits <= maxKeywordHits {
                     relevance += keywordRelevance
                 }
 
@@ -724,7 +725,8 @@ public final class Highlight: @unchecked Sendable {
         var segments: [(start: Int, end: Int, scope: String?)] = []
 
         // Find all capture groups that have scopes
-        for i in 1...scope.scopes.keys.max()! {
+        guard let maxScope = scope.scopes.keys.max() else { return }
+        for i in 1...maxScope {
             guard scope.emit[i] == true,
                   let scopeName = scope.scopes[i] else { continue }
 

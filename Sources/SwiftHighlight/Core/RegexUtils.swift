@@ -106,7 +106,10 @@ public enum Regex {
                     break
                 }
 
-                let matchRange = Range(match.range, in: remaining)!
+                guard let matchRange = Range(match.range, in: remaining) else {
+                    output += remaining
+                    break
+                }
                 output += String(remaining[..<matchRange.lowerBound])
 
                 let matchedText = String(remaining[matchRange])

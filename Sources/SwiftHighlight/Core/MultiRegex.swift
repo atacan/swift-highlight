@@ -173,8 +173,8 @@ internal final class ResumableMultiRegex {
         // If resuming and we got a match at the same position, it's valid
         // Otherwise, try the full matcher from the next position
         if resumingScanAtSamePosition() {
-            if result != nil && result!.index == lastIndex {
-                // Valid resume match
+            if let r = result, r.index == lastIndex {
+                // Valid resume match - keep result as-is
             } else {
                 // Try full matcher from lastIndex + 1
                 let m2 = getMatcher(0)
