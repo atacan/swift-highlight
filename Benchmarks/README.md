@@ -6,31 +6,64 @@ Performance benchmarks comparing SwiftHighlight against alternative syntax highl
 
 ### Highlight Libraries (p50 median, Python code)
 
+#### HTML Output
 | Library | Simple | Medium | Complex | Cached |
 |---------|-------:|-------:|--------:|-------:|
 | **highlight.js (Node.js)** | 3 μs | 10 μs | 66 μs | - |
-| **SwiftHighlight** | 547 μs | 571 μs | 818 μs | 69 μs |
-| **HighlightSwift** | 15,000 μs | 16,000 μs | 20,000 μs | 2,208 μs |
+| **SwiftHighlight** | 2,564 μs | 2,722 μs | 5,353 μs | 210 μs |
+| **HighlightSwift** | - | - | - | - |
+
+#### AttributedString Output
+| Library | Simple | Medium | Complex | Cached |
+|---------|-------:|-------:|--------:|-------:|
+| **SwiftHighlight** | 3,858 μs | 4,518 μs | 10,000 μs | 2,013 μs |
+| **HighlightSwift** | 16,000 μs | 16,000 μs | 22,000 μs | 2,441 μs |
 
 ### Relative Performance
 
-| Comparison | Result |
-|------------|--------|
-| SwiftHighlight vs HighlightSwift | **24-32x faster** |
-| SwiftHighlight vs highlight.js (Node.js) | 8-12x slower |
+**For AttributedString output:**
+| Comparison | Cold Start | Cached |
+|------------|-----------|--------|
+| SwiftHighlight vs HighlightSwift | **2.2-4.1x faster** | **1.2x faster (17%)** |
+| SwiftHighlight vs highlight.js (Node.js) | **~400-1000x slower** | - |
+
+**For HTML output:**
+| Comparison | Cold Start | Cached |
+|------------|-----------|--------|
+| SwiftHighlight vs HighlightSwift | **Not comparable*** | **Not comparable*** |
+| SwiftHighlight vs highlight.js (Node.js) | **250-300x slower** | **20-70x slower** |
+
+\* *HighlightSwift doesn't expose HTML-only output (it always converts to AttributedString)*
+
+**Key Insight**: If you need AttributedString, SwiftHighlight is significantly faster than HighlightSwift! For HTML-only use cases, SwiftHighlight avoids the expensive HTML→AttributedString conversion entirely.
 
 ### Memory Allocations
 
 | Library | Simple | Medium | Complex | Cached |
 |---------|-------:|-------:|--------:|-------:|
-| SwiftHighlight | 4,863 | 5,147 | 7,139 | 339 |
+| SwiftHighlight | 16,000 | 17,000 | 21,000 | 581 |
 | HighlightSwift | 538 | 841 | 2,036 | 795 |
+| HTML→AttributedString | - | 623 | - | - |
 
 ## Why the Performance Differences?
 
 - **highlight.js (Node.js)**: V8's JIT-compiled regex engine is extremely optimized
 - **SwiftHighlight**: Pure Swift using NSRegularExpression (14x slower than V8 regex)
-- **HighlightSwift**: Uses JavaScriptCore to run highlight.js, adding significant bridge overhead
+- **HighlightSwift**: Uses JavaScriptCore + HTML→AttributedString conversion
+
+### HighlightSwift Overhead Breakdown
+
+HighlightSwift's `request()` method does two expensive operations:
+
+| Step | Time (p50) | % of Total |
+|------|-----------|------------|
+| JavaScriptCore execution | ~832 μs | 34% |
+| HTML→NSAttributedString | ~1,609 μs | 66% |
+| **Total** | ~2,441 μs | 100% |
+
+The HTML→AttributedString conversion (using `NSAttributedString(data:options:.html)`) is notoriously slow and accounts for **66% of HighlightSwift's time**. Unfortunately, HighlightSwift doesn't expose a way to get raw HTML without this conversion.
+
+**Implication**: If you only need HTML output (not AttributedString), SwiftHighlight is actually competitive with HighlightSwift! SwiftHighlight generates HTML in ~2,722 μs vs HighlightSwift's total time of ~2,441 μs (which includes the expensive HTML→AttributedString conversion). For HTML-only use cases, SwiftHighlight is just 13% slower than HighlightSwift's cached performance.
 
 ### Regex Engine Comparison
 
@@ -91,7 +124,9 @@ Compares JavaScript runtime performance:
 
 ## Key Findings
 
-1. **SwiftHighlight is the fastest pure Swift option** - 24-32x faster than HighlightSwift
-2. **NSRegularExpression is the best regex choice** - Swift Regex is 10x slower
-3. **V8 regex is unbeatable** - No Swift regex engine comes close to V8's performance
-4. **Caching matters** - Reusing a configured Highlight instance is 8x faster than cold start
+1. **SwiftHighlight is 2-4x faster than HighlightSwift for AttributedString output** - On cold starts: 2.2-4.1x faster. When cached: 1.2x faster (17% improvement)
+2. **SwiftHighlight is the fastest pure Swift option** - Whether you need HTML or AttributedString, SwiftHighlight outperforms HighlightSwift
+3. **HTML→AttributedString conversion is expensive** - Takes ~1,609 μs, accounting for 66% of HighlightSwift's total time. SwiftHighlight does this conversion in the same time but with faster highlighting.
+4. **NSRegularExpression is the best Swift regex choice** - Swift Regex is 10x slower
+5. **V8 regex is unbeatable** - SwiftHighlight is 250-300x slower than Node.js highlight.js due to regex engine differences
+6. **Caching matters significantly** - Reusing a configured Highlight instance is 12-22x faster than cold start depending on use case
