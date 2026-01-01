@@ -25,5 +25,15 @@ let package = Package(
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
             ]
         ),
+        .executableTarget(
+            name: "RegexBenchmarks",
+            dependencies: [
+                .product(name: "Benchmark", package: "package-benchmark"),
+            ],
+            path: "RegexBenchmarks",
+            plugins: [
+                .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
+            ]
+        ),
     ]
 )
