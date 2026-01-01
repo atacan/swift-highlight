@@ -1,19 +1,40 @@
 import Foundation
 
-/// A node in the token tree
-internal enum TokenNode {
+/// A node in the token tree representing parsed code structure.
+public enum TokenNode: Sendable {
+    /// Plain text content
     case text(String)
+    /// A scoped node containing children with semantic meaning
     case scope(ScopeNode)
 }
 
-/// A scope node containing children
-internal final class ScopeNode {
-    var scope: String?
-    var language: String?
-    var children: [TokenNode] = []
+/// A scope node containing children with optional scope and language.
+/// Scopes represent semantic categories like "keyword", "string", "comment", etc.
+public final class ScopeNode: @unchecked Sendable {
+    /// The scope name (e.g., "keyword", "string", "comment")
+    public internal(set) var scope: String?
+    /// The language name for sub-language embedding
+    public internal(set) var language: String?
+    /// Child nodes
+    public internal(set) var children: [TokenNode] = []
 
-    init(scope: String? = nil, language: String? = nil) {
+    public init(scope: String? = nil, language: String? = nil, children: [TokenNode] = []) {
         self.scope = scope
+        self.language = language
+        self.children = children
+    }
+}
+
+/// A wrapper for the token tree root with associated language.
+/// Use this for custom rendering of highlighted code.
+public struct TokenTree: Sendable {
+    /// The root node of the token tree
+    public let root: ScopeNode
+    /// The language used for highlighting
+    public let language: String
+
+    public init(root: ScopeNode, language: String) {
+        self.root = root
         self.language = language
     }
 }
@@ -86,67 +107,10 @@ internal final class TokenTreeEmitter {
         closeAllNodes()
     }
 
-    /// Renders the tree to HTML
+    /// Renders the tree to HTML using the public HTMLRenderer
     func toHTML() -> String {
-        let renderer = HTMLRenderer(options: options)
-        return renderer.render(rootNode)
-    }
-}
-
-/// Renders a token tree to HTML
-internal struct HTMLRenderer {
-    private let options: HighlightOptions
-
-    init(options: HighlightOptions) {
-        self.options = options
-    }
-
-    func render(_ node: ScopeNode) -> String {
-        var buffer = ""
-        renderNode(.scope(node), to: &buffer, isRoot: true)
-        return buffer
-    }
-
-    private func renderNode(_ node: TokenNode, to buffer: inout String, isRoot: Bool = false) {
-        switch node {
-        case .text(let text):
-            buffer += Utils.escapeHTML(text)
-        case .scope(let scopeNode):
-            let hasScope = scopeNode.scope != nil && !isRoot
-            // Skip empty scope nodes (e.g., empty params)
-            if hasScope && scopeNode.children.isEmpty {
-                return
-            }
-            if hasScope {
-                let className = scopeToCSSClass(scopeNode.scope!)
-                buffer += "<span class=\"\(className)\">"
-            }
-            for child in scopeNode.children {
-                renderNode(child, to: &buffer)
-            }
-            if hasScope {
-                buffer += "</span>"
-            }
-        }
-    }
-
-    private func scopeToCSSClass(_ name: String) -> String {
-        // Sub-language scope
-        if name.hasPrefix("language:") {
-            return name.replacingOccurrences(of: "language:", with: "language-")
-        }
-
-        // Tiered scope: comment.line
-        if name.contains(".") {
-            let pieces = name.split(separator: ".")
-            var result = ["\(options.classPrefix)\(pieces[0])"]
-            for (i, piece) in pieces.dropFirst().enumerated() {
-                result.append("\(piece)\(String(repeating: "_", count: i + 1))")
-            }
-            return result.joined(separator: " ")
-        }
-
-        // Simple scope
-        return "\(options.classPrefix)\(name)"
+        let tree = TokenTree(root: rootNode, language: "")
+        let renderer = HTMLRenderer(theme: HTMLTheme(classPrefix: options.classPrefix))
+        return renderer.render(tree)
     }
 }

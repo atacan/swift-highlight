@@ -43,25 +43,27 @@ public final class Highlight: @unchecked Sendable {
 
     // MARK: - Public API
 
-    /// Highlights code with a specific language.
+    /// Parses code and returns the token tree without rendering.
+    /// Use this for custom rendering or when you need to render the same code multiple times.
     ///
     /// - Parameters:
-    ///   - code: The source code to highlight
+    ///   - code: The source code to parse
     ///   - language: The language name to use
     ///   - ignoreIllegals: Whether to ignore illegal syntax (default: true)
-    /// - Returns: The highlight result
-    public func highlight(
+    /// - Returns: The parse result with token tree
+    public func parse(
         _ code: String,
         language: String,
         ignoreIllegals: Bool = true
-    ) -> HighlightResult {
+    ) -> ParseResult {
         do {
-            return try _highlight(language: language, code: code, ignoreIllegals: ignoreIllegals)
+            return try _parse(language: language, code: code, ignoreIllegals: ignoreIllegals)
         } catch {
-            // Safe mode: return escaped code
-            return HighlightResult(
+            // Return empty tree on error
+            let emptyTree = TokenTree(root: ScopeNode(), language: language)
+            return ParseResult(
                 language: language,
-                value: Utils.escapeHTML(code),
+                tokenTree: emptyTree,
                 relevance: 0,
                 illegal: false,
                 code: code,
@@ -70,28 +72,74 @@ public final class Highlight: @unchecked Sendable {
         }
     }
 
-    /// Highlights code with automatic language detection.
+    /// Highlights code using a custom renderer.
+    ///
+    /// - Parameters:
+    ///   - code: The source code to highlight
+    ///   - language: The language name to use
+    ///   - ignoreIllegals: Whether to ignore illegal syntax (default: true)
+    ///   - renderer: The renderer to use for output
+    /// - Returns: The highlight result with rendered output
+    public func highlight<R: TokenRenderer>(
+        _ code: String,
+        language: String,
+        ignoreIllegals: Bool = true,
+        renderer: R
+    ) -> HighlightResult<R.Output> {
+        let parseResult = parse(code, language: language, ignoreIllegals: ignoreIllegals)
+        let output = renderer.render(parseResult.tokenTree)
+
+        return HighlightResult(
+            language: parseResult.language,
+            value: output,
+            relevance: parseResult.relevance,
+            illegal: parseResult.illegal,
+            code: code,
+            tokenTree: parseResult.tokenTree,
+            errorRaised: parseResult.errorRaised
+        )
+    }
+
+    /// Highlights code with a specific language (HTML output).
+    ///
+    /// - Parameters:
+    ///   - code: The source code to highlight
+    ///   - language: The language name to use
+    ///   - ignoreIllegals: Whether to ignore illegal syntax (default: true)
+    /// - Returns: The highlight result with HTML output
+    public func highlight(
+        _ code: String,
+        language: String,
+        ignoreIllegals: Bool = true
+    ) -> HighlightResult<String> {
+        let htmlRenderer = HTMLRenderer(theme: HTMLTheme(classPrefix: options.classPrefix))
+        return highlight(code, language: language, ignoreIllegals: ignoreIllegals, renderer: htmlRenderer)
+    }
+
+    /// Highlights code with automatic language detection using a custom renderer.
     ///
     /// - Parameters:
     ///   - code: The source code to highlight
     ///   - languageSubset: Optional subset of languages to consider
+    ///   - renderer: The renderer to use for output
     /// - Returns: The auto-highlight result with best and second-best matches
-    public func highlightAuto(
+    public func highlightAuto<R: TokenRenderer>(
         _ code: String,
-        languageSubset: [String]? = nil
-    ) -> AutoHighlightResult {
+        languageSubset: [String]? = nil,
+        renderer: R
+    ) -> AutoHighlightResult<R.Output> {
         let subset = languageSubset ?? options.languages ?? Array(languages.keys)
 
         // Start with plaintext
-        let plaintext = justTextResult(code)
-        var results: [HighlightResult] = [plaintext]
+        let plaintext = justTextResult(code, renderer: renderer)
+        var results: [HighlightResult<R.Output>] = [plaintext]
 
         // Try each language
         for name in subset {
             guard let lang = getLanguage(name),
                   !lang.disableAutodetect else { continue }
 
-            let result = highlight(code, language: name, ignoreIllegals: false)
+            let result = highlight(code, language: name, ignoreIllegals: false, renderer: renderer)
             if !result.illegal {
                 results.append(result)
             }
@@ -104,6 +152,20 @@ public final class Highlight: @unchecked Sendable {
         let secondBest = results.count > 1 ? results[1] : nil
 
         return AutoHighlightResult(result: best, secondBest: secondBest)
+    }
+
+    /// Highlights code with automatic language detection (HTML output).
+    ///
+    /// - Parameters:
+    ///   - code: The source code to highlight
+    ///   - languageSubset: Optional subset of languages to consider
+    /// - Returns: The auto-highlight result with best and second-best matches
+    public func highlightAuto(
+        _ code: String,
+        languageSubset: [String]? = nil
+    ) -> AutoHighlightResult<String> {
+        let htmlRenderer = HTMLRenderer(theme: HTMLTheme(classPrefix: options.classPrefix))
+        return highlightAuto(code, languageSubset: languageSubset, renderer: htmlRenderer)
     }
 
     /// Registers a language definition.
@@ -163,13 +225,20 @@ public final class Highlight: @unchecked Sendable {
 
     // MARK: - Private Implementation
 
-    private func justTextResult(_ code: String) -> HighlightResult {
-        HighlightResult(
+    private func justTextResult<R: TokenRenderer>(_ code: String, renderer: R) -> HighlightResult<R.Output> {
+        // Create a simple token tree with just the text
+        let root = ScopeNode()
+        root.children = [.text(code)]
+        let tree = TokenTree(root: root, language: "plaintext")
+        let output = renderer.render(tree)
+
+        return HighlightResult(
             language: "plaintext",
-            value: Utils.escapeHTML(code),
+            value: output,
             relevance: 0,
             illegal: false,
-            code: code
+            code: code,
+            tokenTree: tree
         )
     }
 
@@ -188,12 +257,12 @@ public final class Highlight: @unchecked Sendable {
         return compiled
     }
 
-    private func _highlight(
+    private func _parse(
         language languageName: String,
         code: String,
         ignoreIllegals: Bool,
         continuation: CompiledMode? = nil
-    ) throws -> HighlightResult {
+    ) throws -> ParseResult {
         var keywordHits: [String: Int] = [:]
 
         let language = try getCompiledLanguage(languageName)
@@ -320,11 +389,11 @@ public final class Highlight: @unchecked Sendable {
         }
 
         emitter.finalize()
-        let result = emitter.toHTML()
+        let tokenTree = TokenTree(root: emitter.root, language: languageName)
 
-        return HighlightResult(
+        return ParseResult(
             language: languageName,
-            value: result,
+            tokenTree: tokenTree,
             relevance: relevance,
             illegal: false,
             code: code

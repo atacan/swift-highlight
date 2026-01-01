@@ -71,6 +71,10 @@ ModeReference = .mode(Mode) | .self
 2. Define a function `yourLangLanguage(_ hljs: Highlight) -> Language`
 3. Add extension to `Highlight` with `registerYourLang()` method
 4. Use common modes from `Highlight` (e.g., `Highlight.cLineCommentMode`, `Highlight.quoteStringMode`)
+5. Copy fixture files from `highlight.js/test/markup/<lang>/` using bash `cp` command to ensure exact copies:
+   ```bash
+   cp highlight.js/test/markup/<lang>/*.txt Tests/SwiftHighlightTests/Fixtures/<lang>/
+   ```
 
 Example pattern from Python.swift:
 ```swift
