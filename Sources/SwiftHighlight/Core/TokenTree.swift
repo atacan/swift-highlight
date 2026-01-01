@@ -113,6 +113,10 @@ internal struct HTMLRenderer {
             buffer += Utils.escapeHTML(text)
         case .scope(let scopeNode):
             let hasScope = scopeNode.scope != nil && !isRoot
+            // Skip empty scope nodes (e.g., empty params)
+            if hasScope && scopeNode.children.isEmpty {
+                return
+            }
             if hasScope {
                 let className = scopeToCSSClass(scopeNode.scope!)
                 buffer += "<span class=\"\(className)\">"

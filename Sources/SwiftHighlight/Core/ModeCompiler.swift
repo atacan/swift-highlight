@@ -15,7 +15,9 @@ internal final class CompiledMode {
 
     var contains: [CompiledMode] = []
     var starts: CompiledMode?
-    weak var parent: CompiledMode?
+    /// Parent mode - strong reference for runtime instances created in startNewMode
+    /// (The compile-time modes in ModeCompiler use this as weak via explicit handling)
+    var parent: CompiledMode?
 
     var relevance: Int = 1
     var excludeBegin = false

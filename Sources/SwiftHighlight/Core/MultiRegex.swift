@@ -14,13 +14,23 @@ internal struct EnhancedMatch {
     let type: MatchType
     let rule: CompiledMode?
     let position: Int
+    /// The base index for this pattern's capture groups in the combined regex
+    let groupOffset: Int
 
     var range: NSRange { match.range }
     var index: Int { match.range.location }
 
+    /// Get capture group text, adjusted for this pattern's position in the combined regex
     subscript(_ index: Int) -> String? {
-        let range = match.range(at: index)
+        // In the combined regex, each pattern is wrapped in ().
+        // groupOffset is the index of that wrapper group.
+        // The pattern's own groups are at groupOffset+1, groupOffset+2, etc.
+        // So pattern's group 1 is at groupOffset + 1, group 2 is at groupOffset + 2, etc.
+        let adjustedIndex = groupOffset + index
+        guard adjustedIndex < match.numberOfRanges else { return nil }
+        let range = match.range(at: adjustedIndex)
         guard range.location != NSNotFound else { return nil }
+        guard range.location + range.length <= text.utf16.count else { return nil }
         let start = text.index(text.startIndex, offsetBy: range.location)
         let end = text.index(start, offsetBy: range.length)
         return String(text[start..<end])
@@ -98,7 +108,8 @@ internal final class MultiRegex {
             text: string,
             type: type,
             rule: rule,
-            position: pos
+            position: pos,
+            groupOffset: idx  // Pass the matched group index as offset
         )
     }
 }

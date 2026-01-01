@@ -314,6 +314,11 @@ public final class Highlight: @unchecked Sendable {
             utf16Index = match.index + (processedCount > 0 ? lexemeUTF16Length : 0)
         }
 
+        // Process any remaining buffer content (e.g., from excludeEnd)
+        if !modeBuffer.isEmpty {
+            processBuffer(&modeBuffer, emitter: emitter, mode: top, keywordHits: &keywordHits, relevance: &relevance, language: language)
+        }
+
         emitter.finalize()
         let result = emitter.toHTML()
 
@@ -471,6 +476,9 @@ public final class Highlight: @unchecked Sendable {
 
         startNewMode(newMode, match: match, emitter: emitter, top: &top, modeBuffer: &modeBuffer, language: language)
 
+        // Debug: verify parent chain
+        // Uncomment to debug: print("  AFTER startNewMode: newTop.scope=\(top.scope ?? "nil") newTop.parent.scope=\(top.parent?.scope ?? "nil")")
+
         return newMode.returnBegin ? 0 : lexeme.count
     }
 
@@ -518,6 +526,8 @@ public final class Highlight: @unchecked Sendable {
         newTop.starts = mode.starts
         newTop.onEnd = mode.onEnd
         newTop.endScope = mode.endScope
+
+        // CRITICAL: Set parent to current top BEFORE reassigning top
         newTop.parent = top
 
         top = newTop
@@ -637,18 +647,61 @@ public final class Highlight: @unchecked Sendable {
         modeBuffer: inout String,
         language: CompiledMode
     ) {
-        for i in 1..<match.match.numberOfRanges {
-            guard scope.emit[i] == true else { continue }
-            let scopeName = scope.scopes[i]
-            let text = match[i]
+        // Get the full match text and iterate through it, emitting spans for capture groups
+        guard let fullText = match[0] else { return }
 
-            if let scopeName = scopeName, let text = text {
-                emitter.startScope(scopeName)
-                emitter.addText(text)
-                emitter.endScope()
-            } else if let text = text {
-                emitter.addText(text)
+        // Collect all capture group ranges (relative to fullText start)
+        let fullMatchStart = match.match.range.location
+        var segments: [(start: Int, end: Int, scope: String?)] = []
+
+        // Find all capture groups that have scopes
+        for i in 1...scope.scopes.keys.max()! {
+            guard scope.emit[i] == true,
+                  let scopeName = scope.scopes[i] else { continue }
+
+            // Get the actual range in the combined regex
+            let adjustedIndex = match.groupOffset + i
+            guard adjustedIndex < match.match.numberOfRanges else { continue }
+            let range = match.match.range(at: adjustedIndex)
+            guard range.location != NSNotFound else { continue }
+
+            // Convert to offsets relative to fullText
+            let relativeStart = range.location - fullMatchStart
+            let relativeEnd = relativeStart + range.length
+            segments.append((relativeStart, relativeEnd, scopeName))
+        }
+
+        // Sort segments by start position
+        segments.sort { $0.start < $1.start }
+
+        // Emit text with scopes
+        var pos = 0
+        for seg in segments {
+            // Emit any text before this segment
+            if seg.start > pos {
+                let startIdx = fullText.index(fullText.startIndex, offsetBy: pos)
+                let endIdx = fullText.index(fullText.startIndex, offsetBy: seg.start)
+                emitter.addText(String(fullText[startIdx..<endIdx]))
             }
+
+            // Emit the scoped segment
+            let startIdx = fullText.index(fullText.startIndex, offsetBy: seg.start)
+            let endIdx = fullText.index(fullText.startIndex, offsetBy: seg.end)
+            let segText = String(fullText[startIdx..<endIdx])
+            if let scopeName = seg.scope {
+                emitter.startScope(scopeName)
+                emitter.addText(segText)
+                emitter.endScope()
+            } else {
+                emitter.addText(segText)
+            }
+            pos = seg.end
+        }
+
+        // Emit any remaining text after last segment
+        if pos < fullText.count {
+            let startIdx = fullText.index(fullText.startIndex, offsetBy: pos)
+            emitter.addText(String(fullText[startIdx...]))
         }
     }
 }
