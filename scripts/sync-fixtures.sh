@@ -50,6 +50,17 @@ for lang in "${LANGUAGES[@]}"; do
 done
 
 echo ""
+echo "Applying SwiftHighlight-specific fixture patches..."
+
+# Fix class_self.expect.txt - remove incorrect trailing newline from highlight.js
+# The input file has no trailing newline, so output shouldn't either
+# (matches behavior of other fixtures like diacritic_identifiers)
+if [ -f "$FIXTURES_DIR/python/class_self.expect.txt" ]; then
+    perl -pi -e 'chomp if eof' "$FIXTURES_DIR/python/class_self.expect.txt"
+    echo "  ✓ Fixed class_self.expect.txt trailing newline"
+fi
+
+echo ""
 echo "✓ Fixture sync complete!"
 echo ""
 echo "To sync fixtures after updating highlight.js:"
