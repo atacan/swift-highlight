@@ -71,10 +71,8 @@ ModeReference = .mode(Mode) | .self
 2. Define a function `yourLangLanguage(_ hljs: Highlight) -> Language`
 3. Add extension to `Highlight` with `registerYourLang()` method
 4. Use common modes from `Highlight` (e.g., `Highlight.cLineCommentMode`, `Highlight.quoteStringMode`)
-5. Copy fixture files from `highlight.js/test/markup/<lang>/` using bash `cp` command to ensure exact copies:
-   ```bash
-   cp highlight.js/test/markup/<lang>/*.txt Tests/SwiftHighlightTests/Fixtures/<lang>/
-   ```
+5. Add the language to `scripts/sync-fixtures.sh` LANGUAGES array
+6. Run `./scripts/sync-fixtures.sh` to copy test fixtures from highlight.js submodule
 
 Example pattern from Python.swift:
 ```swift
@@ -142,8 +140,54 @@ node benchmark.js
 
 Historical benchmark results are stored in the `history/` folder for tracking performance over time.
 
+## Test Fixtures and highlight.js Submodule
+
+Test fixtures are synced from the `highlight.js` git submodule to avoid duplication while keeping tests aligned with upstream.
+
+### Initial Setup
+
+When first cloning the repository or after pulling submodule changes:
+
+```bash
+# Initialize submodule
+git submodule update --init --recursive
+
+# Sync test fixtures
+./scripts/sync-fixtures.sh
+```
+
+### Updating highlight.js Version
+
+To update to a newer version of highlight.js:
+
+```bash
+# Update submodule to desired version
+cd highlight.js
+git fetch origin
+git checkout main  # or specific tag like "11.11.1"
+cd ..
+
+# Update submodule reference
+git add highlight.js
+
+# Sync test fixtures from new version
+./scripts/sync-fixtures.sh
+
+# Run tests to check compatibility
+swift test
+
+# Commit if tests pass
+git commit -m "Update highlight.js to <version>"
+```
+
+### Adding Fixtures for a New Language
+
+1. Add the language name to the `LANGUAGES` array in `scripts/sync-fixtures.sh`
+2. Run `./scripts/sync-fixtures.sh` to copy fixtures
+3. Create corresponding test file in `Tests/SwiftHighlightTests/`
+
 ## Reference Material
 
-The `highlight.js/` directory contains the original JavaScript library for reference when porting features or debugging behavior differences.
+The `highlight.js/` directory is a git submodule containing the original JavaScript library for reference when porting features or debugging behavior differences. Test fixtures are automatically synced from this submodule.
 
 The `notes/spec.md` file contains the original API design document.
