@@ -52,7 +52,7 @@ let functionCallPatternSwift = try! Regex(#"\b([a-zA-Z_]\w*)\s*\("#)
 let identifierPatternSwift = try! Regex(#"\b[a-zA-Z_]\w*\b"#)
 
 let benchmarks = {
-    let metrics: [BenchmarkMetric] = [.wallClock]
+    let metrics: [BenchmarkMetric] = [.wallClock, .mallocCountTotal]
     let range = NSRange(testCode.startIndex..., in: testCode)
 
     // MARK: - NSRegularExpression Benchmarks
@@ -150,6 +150,84 @@ let benchmarks = {
             blackHole(testCode.matches(of: commentPatternSwift))
             blackHole(testCode.matches(of: functionCallPatternSwift))
             blackHole(testCode.matches(of: identifierPatternSwift))
+        }
+    }
+
+    // MARK: - firstMatch Loop Comparison (simulates SwiftHighlight usage)
+    // SwiftHighlight calls firstMatch repeatedly, advancing through the string
+
+    Benchmark("NSRegex: firstMatch loop (identifier)", configuration: .init(metrics: metrics)) { benchmark in
+        for _ in benchmark.scaledIterations {
+            var searchStart = 0
+            let utf16Count = testCode.utf16.count
+            var matchCount = 0
+            while searchStart < utf16Count {
+                let searchRange = NSRange(location: searchStart, length: utf16Count - searchStart)
+                guard let match = identifierPatternNS.firstMatch(in: testCode, range: searchRange) else { break }
+                matchCount += 1
+                searchStart = match.range.upperBound
+            }
+            blackHole(matchCount)
+        }
+    }
+
+    Benchmark("SwiftRegex: firstMatch loop (identifier)", configuration: .init(metrics: metrics)) { benchmark in
+        for _ in benchmark.scaledIterations {
+            var searchStart = testCode.startIndex
+            var matchCount = 0
+            while searchStart < testCode.endIndex {
+                guard let match = testCode[searchStart...].firstMatch(of: identifierPatternSwift) else { break }
+                matchCount += 1
+                searchStart = match.range.upperBound
+            }
+            blackHole(matchCount)
+        }
+    }
+
+    // MARK: - Combined pattern (alternation) - closer to MultiRegex behavior
+
+    let combinedPatternNS = try! NSRegularExpression(
+        pattern: #"\b(if|else|for|while|def|class|return|import|from)\b|["'].*?["']|\b\d+\b|#.*"#
+    )
+    let combinedPatternSwift = try! Regex(#"\b(if|else|for|while|def|class|return|import|from)\b|["'].*?["']|\b\d+\b|#.*"#)
+
+    Benchmark("NSRegex: combined alternation", configuration: .init(metrics: metrics)) { benchmark in
+        for _ in benchmark.scaledIterations {
+            blackHole(combinedPatternNS.matches(in: testCode, range: range))
+        }
+    }
+
+    Benchmark("SwiftRegex: combined alternation", configuration: .init(metrics: metrics)) { benchmark in
+        for _ in benchmark.scaledIterations {
+            blackHole(testCode.matches(of: combinedPatternSwift))
+        }
+    }
+
+    Benchmark("NSRegex: combined firstMatch loop", configuration: .init(metrics: metrics)) { benchmark in
+        for _ in benchmark.scaledIterations {
+            var searchStart = 0
+            let utf16Count = testCode.utf16.count
+            var matchCount = 0
+            while searchStart < utf16Count {
+                let searchRange = NSRange(location: searchStart, length: utf16Count - searchStart)
+                guard let match = combinedPatternNS.firstMatch(in: testCode, range: searchRange) else { break }
+                matchCount += 1
+                searchStart = match.range.upperBound
+            }
+            blackHole(matchCount)
+        }
+    }
+
+    Benchmark("SwiftRegex: combined firstMatch loop", configuration: .init(metrics: metrics)) { benchmark in
+        for _ in benchmark.scaledIterations {
+            var searchStart = testCode.startIndex
+            var matchCount = 0
+            while searchStart < testCode.endIndex {
+                guard let match = testCode[searchStart...].firstMatch(of: combinedPatternSwift) else { break }
+                matchCount += 1
+                searchStart = match.range.upperBound
+            }
+            blackHole(matchCount)
         }
     }
 }

@@ -35,5 +35,16 @@ let package = Package(
                 .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
             ]
         ),
+        .executableTarget(
+            name: "MicroBenchmarks",
+            dependencies: [
+                .product(name: "Benchmark", package: "package-benchmark"),
+                .product(name: "SwiftHighlight", package: "swift-highlight"),
+            ],
+            path: "MicroBenchmarks",
+            plugins: [
+                .plugin(name: "BenchmarkPlugin", package: "package-benchmark")
+            ]
+        ),
     ]
 )

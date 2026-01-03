@@ -60,6 +60,49 @@ let benchmarks = {
 
     // MARK: - SwiftHighlight Benchmarks
 
+    // Parse-only benchmarks (no HTML rendering)
+    Benchmark(
+        "SwiftHighlight: Parse Only - Simple",
+        configuration: .init(metrics: metrics)
+    ) { benchmark in
+        let hljs = SwiftHighlight.Highlight()
+        await hljs.registerPython()
+        _ = await hljs.parse(simpleCode, language: "python")  // Warm up
+
+        benchmark.startMeasurement()
+        for _ in benchmark.scaledIterations {
+            blackHole(await hljs.parse(simpleCode, language: "python"))
+        }
+    }
+
+    Benchmark(
+        "SwiftHighlight: Parse Only - Medium",
+        configuration: .init(metrics: metrics)
+    ) { benchmark in
+        let hljs = SwiftHighlight.Highlight()
+        await hljs.registerPython()
+        _ = await hljs.parse(simpleCode, language: "python")  // Warm up
+
+        benchmark.startMeasurement()
+        for _ in benchmark.scaledIterations {
+            blackHole(await hljs.parse(mediumCode, language: "python"))
+        }
+    }
+
+    Benchmark(
+        "SwiftHighlight: Parse Only - Complex",
+        configuration: .init(metrics: metrics)
+    ) { benchmark in
+        let hljs = SwiftHighlight.Highlight()
+        await hljs.registerPython()
+        _ = await hljs.parse(simpleCode, language: "python")  // Warm up
+
+        benchmark.startMeasurement()
+        for _ in benchmark.scaledIterations {
+            blackHole(await hljs.parse(complexCode, language: "python"))
+        }
+    }
+
     Benchmark(
         "SwiftHighlight: Simple Code",
         configuration: .init(metrics: metrics)

@@ -24,6 +24,14 @@ let package = Package(
                 .swiftLanguageMode(.v6)
             ]
         ),
+        .executableTarget(
+            name: "ProfileRunner",
+            dependencies: ["SwiftHighlight"],
+            path: "Sources/ProfileRunner",
+            swiftSettings: [
+                .swiftLanguageMode(.v6)
+            ]
+        ),
         .testTarget(
             name: "SwiftHighlightTests",
             dependencies: ["SwiftHighlight"],
