@@ -486,20 +486,27 @@ let searchRange = NSRange(location: searchStart, length: utf16Count - searchStar
 ## Revised Recommended Order (Based on Profiling + Benchmarks)
 
 ### Quick Wins (< 1 day each)
-| Priority | Hypothesis | Expected Impact | Effort |
-|----------|------------|-----------------|--------|
-| 1 | **H5**: Cache case-insensitive flag | 56x per-call speedup | 15 min |
-| 2 | **H3**: HTML escaping with scalars | 41% faster (2.5% total) | 2 hours |
-| 3 | **H4**: reserveCapacity on buffers | 71% malloc reduction | 30 min |
-| 4 | **H17**: Precompute NSRange | 0.5-1% bridging reduction | 1 hour |
+| Priority | Hypothesis | Expected Impact | Effort | Status |
+|----------|------------|-----------------|--------|--------|
+| 1 | **H5**: Cache case-insensitive flag | 56x per-call speedup | 15 min | ✅ DONE |
+| 2 | **H3**: HTML escaping with scalars | 41% faster (2.5% total) | 2 hours | ✅ DONE |
+| 3 | **H4**: reserveCapacity on buffers | 71% malloc reduction | 30 min | ✅ DONE |
+| 4 | **H17**: Precompute NSRange | 0.5-1% bridging reduction | 1 hour | |
+
+**Results from H3, H4, H5 implementation (2026-01-03):**
+- Large File (10x): 48K → 30K mallocs (**38% reduction**)
+- Parse + HTML Render: 4,852 → 3,051 mallocs (**37% reduction**)
+- HTML Simple: 1,204 → 1,023 mallocs (**15% reduction**)
 
 ### Medium Effort (1-3 days)
-| Priority | Hypothesis | Expected Impact | Effort |
-|----------|------------|-----------------|--------|
-| 5 | **H16**: Cache UTF-16 view/count | 0.5-1% | 4 hours |
-| 6 | **H15**: Autorelease pools | 2-5% | 4 hours |
-| 7 | **H6**: enumerateMatches vs matches | 10% keyword time | 2 hours |
-| 8 | **H18**: Object pooling | 3-5% | 1-2 days |
+| Priority | Hypothesis | Expected Impact | Effort | Status |
+|----------|------------|-----------------|--------|--------|
+| 5 | **H16**: Cache UTF-16 view/count | 0.5-1% | 4 hours | |
+| 6 | **H15**: Autorelease pools | 2-5% | 4 hours | |
+| 7 | ~~**H6**: enumerateMatches vs matches~~ | ~~10% keyword time~~ | ~~2 hours~~ | ❌ NOT FEASIBLE |
+| 8 | **H18**: Object pooling | 3-5% | 1-2 days | |
+
+**H6 rejected (2026-01-03):** Swift's Sendable requirements prevent capturing mutable state in `enumerateMatches()` escaping closure. Collecting results first defeats the lazy iteration benefit.
 
 ### Major Rework (1+ week)
 | Priority | Hypothesis | Expected Impact | Effort |

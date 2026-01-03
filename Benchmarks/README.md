@@ -130,3 +130,16 @@ Compares JavaScript runtime performance:
 4. **NSRegularExpression is the best Swift regex choice** - Swift Regex is 10x slower
 5. **V8 regex is unbeatable** - SwiftHighlight is 250-300x slower than Node.js highlight.js due to regex engine differences
 6. **Caching matters significantly** - Reusing a configured Highlight instance is 12-22x faster than cold start depending on use case
+
+## Baseline and Compare
+
+```bash
+cd Benchmarks
+# f566172 is the commit hash for example
+# Create the benchmark
+swift package --allow-writing-to-package-directory benchmark --target HighlightBenchmarks baseline update HighlightBenchmarks_f566172
+# Compare against that benchmark
+cd Benchmarks
+swift package benchmark --target HighlightBenchmarks baseline compare HighlightBenchmarks_f566172
+swift package benchmark --target MicroBenchmarks baseline compare MicroBenchmarks_f566172
+```
