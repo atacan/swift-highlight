@@ -33,16 +33,17 @@ Based on benchmark results (2026-01-01):
 3. Allocates Range objects
 
 **Potential Solutions**:
-1. **Swift Regex (iOS 16+/macOS 13+)**: Use `Regex<Output>` from Swift's native regex library - potentially 2-10x faster for common patterns
+1. ~~**Swift Regex (iOS 16+/macOS 13+)**~~: **REJECTED** - Benchmarks show Swift Regex is 5-24x SLOWER than NSRegularExpression (see benchmark section below)
 2. **Custom finite automaton**: For simple patterns (keywords, identifiers), build a custom DFA that doesn't use regex
 3. **PCRE2 or RE2**: Consider linking against faster C regex libraries
 4. **Pattern caching with pre-computed offsets**: Cache more information about patterns to reduce per-match overhead
+5. **Reduce ObjC bridging**: The 27% ObjC/bridging overhead exceeds the 18% regex engine time
 
-**Estimated Impact**: 30-60% improvement if regex is the primary bottleneck
+**Estimated Impact**: 20-30% improvement (primarily from reducing bridging, not changing regex engine)
 
 ---
 
-### H2: String Index Conversions (HIGH IMPACT)
+### H2: String Index Conversions (LOW IMPACT - per Instruments)
 
 **Problem**: The code extensively converts between Swift String indices and UTF-16 offsets because NSRegularExpression uses UTF-16.
 
@@ -64,7 +65,7 @@ let beforeMatch = String(code[startIndex..<endIndex])  // Substring allocation
 3. **Use Substring instead of String**: `String(code[...])` allocates; keep as Substring until output
 4. **Batch index calculations**: In emitMultiClass, iterate linearly instead of calling `index(offsetBy:)` repeatedly
 
-**Estimated Impact**: 15-30% improvement
+**Estimated Impact**: ~~15-30%~~ **0.5-1%** (Instruments shows String Indexing is only 2.0% of total time)
 
 ---
 
@@ -102,11 +103,11 @@ static func escapeHTMLFast(_ value: String) -> String {
 }
 ```
 
-**Estimated Impact**: 10-20% improvement for HTML output path
+**Estimated Impact**: ~~10-20%~~ **2-3% overall** (HTML Rendering is 6% of time; 41% improvement × 6% = 2.5% total)
 
 ---
 
-### H4: String Accumulation Pattern (MEDIUM IMPACT)
+### H4: String Accumulation Pattern (LOW IMPACT - per Instruments)
 
 **Problem**: Mode buffer uses `+=` for string concatenation:
 
@@ -125,11 +126,11 @@ Each `+=` potentially reallocates the underlying storage.
 2. **Array of substrings**: Collect `[Substring]` and join once at end
 3. **ContiguousArray<UInt8>**: Work with bytes directly
 
-**Estimated Impact**: 10-15% improvement
+**Estimated Impact**: ~~10-15%~~ **<0.5% time** (String Building is 2.6% of time; main benefit is **71% malloc reduction**)
 
 ---
 
-### H5: Case-Insensitivity Check in Hot Path (MEDIUM IMPACT)
+### H5: Case-Insensitivity Check in Hot Path (QUICK WIN)
 
 **Problem**: In `processKeywords()` at line 432:
 ```swift
@@ -143,7 +144,7 @@ This iterates ALL registered languages on EVERY `processKeywords` call (potentia
 2. **Store in language compilation**: Pass flag through from `ModeCompiler`
 3. **Check only current language**: `language.caseInsensitive` instead of scanning all
 
-**Estimated Impact**: 5-15% improvement depending on number of languages registered
+**Estimated Impact**: **56x faster** per call (benchmark: 7μs → 0.125μs). Trivial fix with no risk.
 
 ---
 
@@ -167,7 +168,7 @@ This collects ALL matches into an array upfront.
 
 ---
 
-### H7: Token Tree Allocation (MEDIUM IMPACT)
+### H7: Token Tree Allocation (LOW TIME IMPACT, HIGH MALLOC IMPACT)
 
 **Problem**: Every scope/text node creates object allocations:
 - `MutableScopeNode` class instances
@@ -179,7 +180,7 @@ This collects ALL matches into an array upfront.
 2. **Flat array representation**: Store tree as `[(type, start, end, scope)]` array
 3. **Streaming output**: For HTML, emit directly without building intermediate tree
 
-**Estimated Impact**: 10-15% improvement
+**Estimated Impact**: ~~10-15%~~ **<0.3% time** (Token Tree is only 0.4% of runtime), but **210x malloc reduction** which helps cache efficiency
 
 ---
 
@@ -252,22 +253,11 @@ while current !== endMode.parent {
 
 ## Experimental/Radical Hypotheses
 
-### H12: Port to Swift Regex Completely
+### ~~H12: Port to Swift Regex Completely~~ **REJECTED**
 
-Replace NSRegularExpression entirely with Swift's `Regex` type (requires iOS 16+/macOS 13+):
+~~Replace NSRegularExpression entirely with Swift's `Regex` type (requires iOS 16+/macOS 13+)~~
 
-```swift
-// Current
-let regex = try? NSRegularExpression(pattern: pattern, options: options)
-let match = regex.firstMatch(in: string, range: range)
-
-// Swift Regex
-let regex = try? Regex(pattern)
-if let match = try? regex.firstMatch(in: string) { ... }
-```
-
-**Estimated Impact**: 20-50% improvement (unverified, needs benchmarking)
-**Tradeoff**: Drops support for older OS versions
+**Status**: **REJECTED** - Benchmarks prove Swift Regex is **5-24x SLOWER** than NSRegularExpression. See "Swift Regex vs NSRegularExpression Benchmark" section below.
 
 ---
 
@@ -342,10 +332,10 @@ func tokenizePython(_ code: String) -> [Token] {
 ### H5: Case-Insensitive Check
 | Approach | Time (p50) |
 |----------|-----------|
-| Dictionary.values.contains | 5.3μs |
-| Cached boolean | **0.13μs** |
+| Dictionary.values.contains | 7μs |
+| Cached boolean | **0.125μs** |
 
-**Finding**: Caching is **40x faster**. Very easy win!
+**Finding**: Caching is **56x faster**. Very easy win!
 
 ### H6: Keyword Matching
 | Approach | Time (p50) | Mallocs |
@@ -416,24 +406,113 @@ Based on profiling, the biggest wins come from:
 
 ---
 
-## Revised Recommended Order (Based on Profiling)
+## Additional Optimizations (Identified via Profiling)
+
+### H15: Autorelease Pool Overhead
+
+**Problem**: Every NSRegularExpression match creates autoreleased NSTextCheckingResult objects. In tight loops (1000+ iterations), these pile up until the autorelease pool drains.
+
+**Evidence**: Memory Allocation shows 7.6% of total time. NSTextCheckingResult allocations compound with ObjC runtime overhead.
+
+**Potential Solutions**:
+```swift
+// Wrap tight loops to release objects eagerly
+autoreleasepool {
+    for match in pattern.matches(in: text, range: range) {
+        // Process match
+    }
+}
+```
+
+**Estimated Impact**: 2-5% time reduction, significant memory pressure reduction
+
+---
+
+### H16: UTF-16 String Caching
+
+**Problem**: `code.utf16.count` and `String.Index(utf16Offset:in:)` both traverse the string. Called repeatedly in hot paths.
+
+**Evidence**: String Indexing is 2.0% of time, but called thousands of times per file.
+
+**Potential Solutions**:
+```swift
+// Cache at start of _highlight()
+let utf16View = code.utf16
+let utf16Count = utf16View.count
+
+// Or more aggressively:
+let utf16Array = ContiguousArray(code.utf16)  // O(1) index access
+```
+
+**Estimated Impact**: 0.5-1% time reduction
+
+---
+
+### H17: NSRange Precomputation
+
+**Problem**: `NSRange(location:length:)` is called for every pattern match. Creating NSRange involves ObjC bridging.
+
+**Evidence**: Part of the 12.5% Swift-ObjC Bridging overhead.
+
+**Potential Solutions**:
+```swift
+// Precompute the full-text range once
+let fullRange = NSRange(code.startIndex..., in: code)
+
+// Or keep track of search ranges in UTF-16 units directly
+var searchStart: Int = 0
+let searchRange = NSRange(location: searchStart, length: utf16Count - searchStart)
+```
+
+**Estimated Impact**: 0.5-1% time reduction
+
+---
+
+### H18: Object Pooling for Hot Paths
+
+**Problem**: Allocating and deallocating objects in tight loops creates GC pressure and cache thrashing.
+
+**Evidence**: Memory Allocation is 7.6%, Array Allocation is 1.4%.
+
+**Potential Solutions**:
+1. **Reuse match result arrays**: Pre-allocate and clear instead of creating new arrays
+2. **Pool CompiledMode lookups**: Cache frequently accessed modes
+3. **Lazy token tree building**: Build output directly instead of intermediate structure
+
+**Estimated Impact**: 3-5% time reduction, significant malloc reduction
+
+---
+
+## Revised Recommended Order (Based on Profiling + Benchmarks)
 
 ### Quick Wins (< 1 day each)
-1. **H3 (HTML escaping with scalars)**: 41% faster, confirmed 6% of time in profile
-2. **H5 (Case-insensitive check)**: 40x faster, trivial fix
-3. **H4 (reserveCapacity on modeBuffer)**: Reduce 7.6% memory overhead
+| Priority | Hypothesis | Expected Impact | Effort |
+|----------|------------|-----------------|--------|
+| 1 | **H5**: Cache case-insensitive flag | 56x per-call speedup | 15 min |
+| 2 | **H3**: HTML escaping with scalars | 41% faster (2.5% total) | 2 hours |
+| 3 | **H4**: reserveCapacity on buffers | 71% malloc reduction | 30 min |
+| 4 | **H17**: Precompute NSRange | 0.5-1% bridging reduction | 1 hour |
 
 ### Medium Effort (1-3 days)
-4. **Reduce String↔NSString bridging**:
-   - Cache UTF-16 representation of code string
-   - Avoid repeated bridging in hot paths
-   - Use `ContiguousArray<UInt16>` for working with regex
+| Priority | Hypothesis | Expected Impact | Effort |
+|----------|------------|-----------------|--------|
+| 5 | **H16**: Cache UTF-16 view/count | 0.5-1% | 4 hours |
+| 6 | **H15**: Autorelease pools | 2-5% | 4 hours |
+| 7 | **H6**: enumerateMatches vs matches | 10% keyword time | 2 hours |
+| 8 | **H18**: Object pooling | 3-5% | 1-2 days |
 
 ### Major Rework (1+ week)
-5. **Custom lexer for common patterns**:
-   - Keywords: Use Trie instead of regex
-   - Simple tokens: Hand-coded state machine
-   - Only use regex for complex patterns
+| Priority | Hypothesis | Expected Impact | Effort |
+|----------|------------|-----------------|--------|
+| 9 | **H7**: Flat token array | 5x faster, 210x fewer mallocs | 3-5 days |
+| 10 | **H1**: Custom DFA for keywords | 15-20% | 1-2 weeks |
+| 11 | **H14**: Generated lexers | 50-80% | 2+ weeks |
+
+### Rejected
+| Hypothesis | Reason |
+|------------|--------|
+| **H12**: Swift Regex | 5-24x SLOWER than NSRegularExpression |
+| **H13**: WebAssembly/V8 | Too much complexity for uncertain gain |
 
 ---
 

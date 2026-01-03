@@ -259,6 +259,7 @@ public actor Highlight {
         let emitter = TokenTreeEmitter(options: options)
         var top = continuation ?? language
         var modeBuffer = ""
+        modeBuffer.reserveCapacity(code.count)
         var relevance = 0
 
         // Use UTF-16 based indexing to match NSRegularExpression
@@ -428,8 +429,8 @@ public actor Highlight {
         // Use matches(in:range:) instead of enumerateMatches to avoid closure capture issues
         let matches = patternRe.matches(in: text, options: [], range: range)
 
-        // Check case-insensitivity once before the loop
-        let useCaseInsensitive = languages.values.contains { $0.caseInsensitive }
+        // Use cached case-insensitivity flag from compiled language
+        let useCaseInsensitive = language.caseInsensitive
 
         for result in matches {
             guard let matchRange = Range(result.range, in: text) else { continue }

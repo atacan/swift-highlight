@@ -38,6 +38,9 @@ internal final class CompiledMode {
     var onEnd: ModeCallback?
     var beforeBegin: ModeCallback?
 
+    /// Cached case-insensitivity flag from language definition
+    var caseInsensitive: Bool = false
+
     init() {}
 }
 
@@ -119,6 +122,7 @@ internal final class ModeCompiler {
         defer { compilingModes.remove(mode.id) }
 
         let cmode = CompiledMode()
+        cmode.caseInsensitive = caseInsensitive
 
         // Cache early so .self references can find it
         modeCache[mode.id] = cmode

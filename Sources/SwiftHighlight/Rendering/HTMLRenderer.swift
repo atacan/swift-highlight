@@ -84,12 +84,18 @@ public struct HTMLRenderer: TokenRenderer {
     }
 
     private func escapeHTML(_ value: String) -> String {
-        var result = value
-        result = result.replacingOccurrences(of: "&", with: "&amp;")
-        result = result.replacingOccurrences(of: "<", with: "&lt;")
-        result = result.replacingOccurrences(of: ">", with: "&gt;")
-        result = result.replacingOccurrences(of: "\"", with: "&quot;")
-        result = result.replacingOccurrences(of: "'", with: "&#x27;")
+        var result = ""
+        result.reserveCapacity(value.count + value.count / 10)
+        for scalar in value.unicodeScalars {
+            switch scalar {
+            case "&": result += "&amp;"
+            case "<": result += "&lt;"
+            case ">": result += "&gt;"
+            case "\"": result += "&quot;"
+            case "'": result += "&#x27;"
+            default: result.unicodeScalars.append(scalar)
+            }
+        }
         return result
     }
 }
