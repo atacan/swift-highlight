@@ -16,9 +16,9 @@ A pure Swift port of [highlight.js](https://highlightjs.org/) for syntax highlig
 import SwiftHighlight
 
 let hljs = Highlight()
-hljs.registerPython()
+await hljs.registerPython()
 
-let result: HighlightResult<String> = hljs.highlight("def hello():", language: "python")
+let result: HighlightResult<String> = await hljs.highlight("def hello():", language: "python")
 let html: String = result.value
 // <span class="hljs-keyword">def</span> <span class="hljs-title function_">hello</span>():
 ```
@@ -28,37 +28,56 @@ let html: String = result.value
 ```swift
 import SwiftUI
 
-let renderer = AttributedStringRenderer(theme: .dark)
-let result: HighlightResult<AttributedString> = hljs.highlight(code, language: "python", renderer: renderer)
-let attributed: AttributedString = result.value
+struct CodeView: View {
+    @State private var highlighted: AttributedString = ""
+    let code: String
 
-// In a View:
-Text(result.value)
-    .font(.system(.body, design: .monospaced))
+    var body: some View {
+        Text(highlighted)
+            .font(.system(.body, design: .monospaced))
+            .task {
+                let hljs = Highlight()
+                await hljs.registerPython()
+                let renderer = AttributedStringRenderer(theme: .dark)
+                let result = await hljs.highlight(code, language: "python", renderer: renderer)
+                highlighted = result.value
+            }
+    }
+}
 ```
 
 ### NSAttributedString (AppKit/UIKit)
 
 ```swift
+let hljs = Highlight()
+await hljs.registerPython()
 let renderer = NSAttributedStringRenderer(theme: .dark)
-let result: HighlightResult<NSAttributedString> = hljs.highlight(code, language: "python", renderer: renderer)
+let result = await hljs.highlight(code, language: "python", renderer: renderer)
 
-textView.attributedText = result.value  // UIKit
-textView.textStorage?.setAttributedString(result.value)  // AppKit
+await MainActor.run {
+    textView.attributedText = result.value  // UIKit
+    textView.textStorage?.setAttributedString(result.value)  // AppKit
+}
 ```
 
 ### ANSI Terminal Output
 
 ```swift
+let hljs = Highlight()
+await hljs.registerPython()
 let renderer = ANSIRenderer(theme: .dark)
-let result: HighlightResult<String> = hljs.highlight(code, language: "python", renderer: renderer)
+let result = await hljs.highlight(code, language: "python", renderer: renderer)
 print(result.value)  // Colored terminal output
 ```
 
 ### Auto-Detection
 
 ```swift
-let result: AutoHighlightResult<String> = hljs.highlightAuto(code)
+let hljs = Highlight()
+await hljs.registerPython()
+await hljs.registerJSON()
+
+let result = await hljs.highlightAuto(code)
 let language: String = result.language
 let html: String = result.value
 ```
@@ -68,7 +87,10 @@ let html: String = result.value
 Access the token tree directly for custom output formats:
 
 ```swift
-let parseResult: ParseResult = hljs.parse(code, language: "python")
+let hljs = Highlight()
+await hljs.registerPython()
+
+let parseResult = await hljs.parse(code, language: "python")
 let tree: TokenTree = parseResult.tokenTree
 
 func render(_ node: TokenNode) -> String {
@@ -96,6 +118,10 @@ let theme = AttributedStringTheme(styles: [
     "comment": ScopeStyle(foregroundColor: ThemeColor(hex: "#888888")!, textStyle: .italic),
 ])
 let renderer = AttributedStringRenderer(theme: theme)
+
+let hljs = Highlight()
+await hljs.registerPython()
+let result = await hljs.highlight(code, language: "python", renderer: renderer)
 ```
 
 ## Running the Example
