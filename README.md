@@ -138,6 +138,12 @@ This prints HTML, colored ANSI terminal output, and the token tree structure.
 - Python
 - JSON
 
+## Attribution
+
+SwiftHighlight is a Swift port of [highlight.js](https://github.com/highlightjs/highlight.js) by Ivan Sagalaev and contributors.
+
 ## License
 
-MIT
+BSD 3-Clause License - see [LICENSE](LICENSE) file for details.
+
+This project is based on highlight.js, which is also licensed under the BSD 3-Clause License.
