@@ -1,4 +1,5 @@
 .build/
+.swiftpm/
 .claude/settings.local.json
 .vscode/launch.json
 .build-linux/

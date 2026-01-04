@@ -1,5 +1,6 @@
 import SwiftHighlight
 
+
 let code = """
     def fibonacci(n):
         \"\"\"Calculate the nth Fibonacci number.\"\"\"
@@ -13,13 +14,13 @@ let code = """
     """
 
 let hljs = Highlight()
-hljs.registerPython()
+await hljs.registerPython()
 
 // HTML Output
 print("=" * 60)
 print("HTML OUTPUT")
 print("=" * 60)
-let htmlResult: HighlightResult<String> = hljs.highlight(code, language: "python")
+let htmlResult: HighlightResult<String> = await hljs.highlight(code, language: "python")
 print(htmlResult.value)
 print()
 
@@ -28,7 +29,7 @@ print("=" * 60)
 print("ANSI TERMINAL OUTPUT")
 print("=" * 60)
 let ansiRenderer = ANSIRenderer(theme: .dark)
-let ansiResult: HighlightResult<String> = hljs.highlight(code, language: "python", renderer: ansiRenderer)
+let ansiResult: HighlightResult<String> = await hljs.highlight(code, language: "python", renderer: ansiRenderer)
 print(ansiResult.value)
 print()
 
@@ -36,7 +37,7 @@ print()
 print("=" * 60)
 print("TOKEN TREE STRUCTURE")
 print("=" * 60)
-let parseResult: ParseResult = hljs.parse(code, language: "python")
+let parseResult: ParseResult = await hljs.parse(code, language: "python")
 printTree(parseResult.tokenTree.root, indent: 0)
 
 func printTree(_ node: ScopeNode, indent: Int) {
