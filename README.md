@@ -2,6 +2,8 @@
 
 A pure Swift port of [highlight.js](https://highlightjs.org/) for syntax highlighting. No dependencies beyond Foundation.
 
+See [Benchmarks](Benchmarks/README.md) for performance comparison against running the JS code with JavascriptCore like the other packages do.
+
 ## Installation
 
 ```swift
