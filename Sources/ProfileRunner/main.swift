@@ -51,8 +51,7 @@ struct ProfileRunner {
 
         print("Starting profiling run: \(iterations) iterations")
 
-        let start = CFAbsoluteTimeGetCurrent()
-
+        let start = Date()
         for i in 0..<iterations {
             let result = await hljs.highlight(complexCode, language: "python")
             // Prevent optimization from removing the call
@@ -63,8 +62,8 @@ struct ProfileRunner {
                 print("Progress: \(i)/\(iterations)")
             }
         }
+        let elapsed = Date().timeIntervalSince(start)
 
-        let elapsed = CFAbsoluteTimeGetCurrent() - start
         print("Completed \(iterations) iterations in \(String(format: "%.2f", elapsed))s")
         print("Average: \(String(format: "%.2f", elapsed / Double(iterations) * 1000))ms per iteration")
     }

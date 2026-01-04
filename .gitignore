@@ -1,6 +1,7 @@
 .build/
 .claude/settings.local.json
 .vscode/launch.json
+.build-linux/
 
 # Test fixtures are synced from highlight.js submodule via scripts/sync-fixtures.sh
 Tests/SwiftHighlightTests/Fixtures/*

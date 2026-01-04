@@ -77,6 +77,7 @@ test-on-linux: ## Run swift tests inside a Docker container
 	@echo "$(YELLOW)Running tests in Docker ($(DOCKER_IMAGE))...$(RESET)"
 	docker run --rm \
 		-v "$(CURDIR):/code" \
+		-v "$(CURDIR)/.build-linux:/code/.build" \
 		-w /code \
 		$(DOCKER_IMAGE) \
 		swift test
