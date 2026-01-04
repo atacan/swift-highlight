@@ -1,0 +1,12 @@
+{
+  "name": "highlight-benchmarks",
+  "version": "1.0.0",
+  "description": "Benchmarks comparing highlight.js performance",
+  "main": "benchmark.js",
+  "scripts": {
+    "benchmark": "node benchmark.js"
+  },
+  "dependencies": {
+    "highlight.js": "^11.11.0"
+  }
+}
