@@ -549,22 +549,22 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
     // Two-name parameter: `external internal:` (must be first for precedence)
     let functionParameterExternalInternal = Mode(
         match: .string(#"(\#(identifier))\s+(\#(identifier))\s*:"#),
-        beginScope: .indexed([1: "params", 2: "params"]),
-        relevance: 0
+        relevance: 0,
+        beginScope: .indexed([1: "params", 2: "params"])
     )
 
     // Underscore parameter: `_:`
     let functionParameterUnderscore = Mode(
         match: .string(#"(_)\s*:"#),
-        beginScope: .indexed([1: "keyword"]),
-        relevance: 0
+        relevance: 0,
+        beginScope: .indexed([1: "keyword"])
     )
 
     // Single parameter name: `name:`
     let functionParameterName = Mode(
         match: .string(#"(\#(identifier))\s*:"#),
-        beginScope: .indexed([1: "params"]),
-        relevance: 0
+        relevance: 0,
+        beginScope: .indexed([1: "params"])
     )
 
     // Function parameters (...)
