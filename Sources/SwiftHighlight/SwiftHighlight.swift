@@ -419,6 +419,8 @@ public actor Highlight {
     ) {
         guard let keywords = mode.keywords,
               let patternRe = mode.keywordPatternRe else {
+            // No keywords defined: just emit as plain text
+            // (The main loop is responsible for matching contains modes during scanning)
             emitter.addText(text)
             return
         }
@@ -429,13 +431,21 @@ public actor Highlight {
         // Use matches(in:range:) instead of enumerateMatches to avoid closure capture issues
         let matches = patternRe.matches(in: text, options: [], range: range)
 
+        // If no keyword pattern matches at all, just emit as plain text
+        // (This handles cases like "1e_1" in Python where the keyword pattern
+        // requires starting with a letter but the text starts with a digit)
+        guard !matches.isEmpty else {
+            emitter.addText(text)
+            return
+        }
+
         // Use cached case-insensitivity flag from compiled language
         let useCaseInsensitive = language.caseInsensitive
 
         for result in matches {
             guard let matchRange = Range(result.range, in: text) else { continue }
 
-            // Add text before keyword
+            // Add text before keyword as plain text
             if matchRange.lowerBound > lastIndex {
                 emitter.addText(String(text[lastIndex..<matchRange.lowerBound]))
             }
@@ -460,16 +470,68 @@ public actor Highlight {
                     emitter.endScope()
                 }
             } else {
-                emitter.addText(word)
+                // Not a keyword: try to match with contains modes
+                // For single words, only apply if a pattern matches the ENTIRE word
+                // (prevents partial matches like "1" in "1e_1")
+                processWordWithContains(word, emitter: emitter, mode: mode, relevance: &relevance)
             }
 
             lastIndex = matchRange.upperBound
         }
 
-        // Add remaining text
+        // Add remaining text as plain text
         if lastIndex < text.endIndex {
             emitter.addText(String(text[lastIndex...]))
         }
+    }
+
+    /// Processes a single word by trying to match against the mode's contains patterns.
+    /// Only highlights if a pattern matches the ENTIRE word to prevent partial matches.
+    private func processWordWithContains(
+        _ word: String,
+        emitter: TokenTreeEmitter,
+        mode: CompiledMode,
+        relevance: inout Int
+    ) {
+        guard !word.isEmpty else { return }
+
+        // If the mode has no contains, just emit as plain text
+        guard !mode.contains.isEmpty else {
+            emitter.addText(word)
+            return
+        }
+
+        // Try to find a match-only pattern that matches the ENTIRE word
+        for child in mode.contains {
+            guard let beginRe = child.beginRe else { continue }
+
+            // Only consider match-only modes
+            let isMatchOnlyMode = child.terminatorEnd.isEmpty ||
+                child.terminatorEnd == #"\B|\b"# ||
+                child.terminatorEnd == #"(?:\B|\b)"#
+            guard isMatchOnlyMode else { continue }
+
+            // Check if the pattern matches the entire word
+            let range = NSRange(word.startIndex..., in: word)
+            if let match = beginRe.firstMatch(in: word, options: [], range: range) {
+                // Verify the match covers the entire word
+                if match.range.location == 0 && match.range.length == word.utf16.count {
+                    // Full match - emit with scope
+                    if let scope = child.scope {
+                        emitter.startScope(scope)
+                        emitter.addText(word)
+                        emitter.endScope()
+                    } else {
+                        emitter.addText(word)
+                    }
+                    relevance += child.relevance
+                    return
+                }
+            }
+        }
+
+        // No pattern matched the entire word - emit as plain text
+        emitter.addText(word)
     }
 
     private func processSubLanguage(

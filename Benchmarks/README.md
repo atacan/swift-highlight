@@ -6,6 +6,8 @@ Performance benchmarks comparing SwiftHighlight against alternative syntax highl
 
 ### Highlight Libraries (p50 median, Python code)
 
+Note: HighlightSwift is based on JavascriptCore.
+
 #### HTML Output
 | Library | Simple | Medium | Complex | Cached |
 |---------|-------:|-------:|--------:|-------:|
