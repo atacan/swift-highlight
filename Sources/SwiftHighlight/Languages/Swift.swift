@@ -544,27 +544,28 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
         ]
     )
 
-    // Function parameter names - match-based to work with keyword processing
+    // Function parameter names - simple patterns without lookbehind for testing
+    // Note: These will match too liberally but let's see if they show up in the contains list
 
-    // Two-name parameter: `external internal:` (must be first for precedence)
-    let functionParameterExternalInternal = Mode(
-        match: .string(#"(\#(identifier))\s+(\#(identifier))\s*:"#),
-        relevance: 0,
-        beginScope: .indexed([1: "params", 2: "params"])
+    // Single parameter name: `name:`
+    let functionParameterName = Mode(
+        scope: "params",
+        match: .string(#"\b\#(identifier)\s*:"#),
+        relevance: 0
     )
 
     // Underscore parameter: `_:`
     let functionParameterUnderscore = Mode(
-        match: .string(#"(_)\s*:"#),
-        relevance: 0,
-        beginScope: .indexed([1: "keyword"])
+        scope: "keyword",
+        match: .string(#"\b_\s*:"#),
+        relevance: 0
     )
 
-    // Single parameter name: `name:`
-    let functionParameterName = Mode(
-        match: .string(#"(\#(identifier))\s*:"#),
+    // Two-name parameter: `external internal:` (must be first for precedence)
+    let functionParameterExternalInternal = Mode(
+        match: .string(#"\b(\#(identifier))\s+(\#(identifier))\s*:"#),
         relevance: 0,
-        beginScope: .indexed([1: "params"])
+        beginScope: .indexed([1: "params", 2: "params"])
     )
 
     // Function parameters (...)
@@ -574,6 +575,8 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
         keywords: keywords,
         illegal: .string(#"[\"']"#),
         contains: [
+            .mode(functionParameterExternalInternal), // Must be first for precedence
+            .mode(functionParameterUnderscore),
             .mode(functionParameterName),
             .mode(lineComment),
             .mode(blockComment),

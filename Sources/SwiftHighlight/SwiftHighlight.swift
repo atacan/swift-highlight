@@ -492,7 +492,7 @@ public actor Highlight {
                 // Not a keyword: try to match with contains modes
                 // For single words, only apply if a pattern matches the ENTIRE word
                 // (prevents partial matches like "1" in "1e_1")
-                processWordWithContains(word, emitter: emitter, mode: mode, relevance: &relevance)
+                processWordWithContains(word, in: text, at: matchRange, emitter: emitter, mode: mode, relevance: &relevance)
             }
 
             lastIndex = matchRange.upperBound
@@ -512,8 +512,11 @@ public actor Highlight {
 
     /// Processes a single word by trying to match against the mode's contains patterns.
     /// Only highlights if a pattern matches the ENTIRE word to prevent partial matches.
+    /// Checks patterns against the original text context to support lookahead/lookbehind.
     private func processWordWithContains(
         _ word: String,
+        in text: String,
+        at wordRange: Range<String.Index>,
         emitter: TokenTreeEmitter,
         mode: CompiledMode,
         relevance: inout Int
@@ -534,6 +537,7 @@ public actor Highlight {
         }
 
         // Try to find a match-only pattern that matches the ENTIRE word
+        // Check against the original text to support lookahead/lookbehind assertions
         for child in effectiveContains {
             guard let beginRe = child.beginRe else { continue }
 
@@ -543,12 +547,39 @@ public actor Highlight {
                 child.terminatorEnd == #"(?:\B|\b)"#
             guard isMatchOnlyMode else { continue }
 
-            // Check if the pattern matches the entire word
-            let range = NSRange(word.startIndex..., in: word)
-            if let match = beginRe.firstMatch(in: word, options: [], range: range) {
-                // Verify the match covers the entire word
-                if match.range.location == 0 && match.range.length == word.utf16.count {
-                    // Full match - emit with scope
+            // Check if the pattern matches at the word's position in the original text
+            // For lookbehind patterns, we need to check a bit before the word to include context
+            let searchStartIndex: String.Index
+            if text.distance(from: text.startIndex, to: wordRange.lowerBound) >= 5 {
+                searchStartIndex = text.index(wordRange.lowerBound, offsetBy: -5)
+            } else {
+                searchStartIndex = text.startIndex
+            }
+            let textFromBefore = String(text[searchStartIndex...])
+            let range = NSRange(textFromBefore.startIndex..., in: textFromBefore)
+
+            if let match = beginRe.firstMatch(in: textFromBefore, options: [], range: range) {
+                // For patterns with capture groups, check if capture group 1 matches the word
+                if match.numberOfRanges > 1, let captureRange = Range(match.range(at: 1), in: textFromBefore) {
+                    let capturedText = String(textFromBefore[captureRange])
+                    if capturedText == word {
+                        // The captured group matches the word - highlight it
+                        if let beginScope = child.beginScope, let firstScope = beginScope.scopes[1] {
+                            emitter.startScope(firstScope)
+                            emitter.addText(word)
+                            emitter.endScope()
+                        } else if let scope = child.scope {
+                            emitter.startScope(scope)
+                            emitter.addText(word)
+                            emitter.endScope()
+                        } else {
+                            emitter.addText(word)
+                        }
+                        relevance += child.relevance
+                        return
+                    }
+                } else if match.range.location >= 0 && match.range.length == word.utf16.count {
+                    // No capture groups - check if match covers exactly the word
                     if let scope = child.scope {
                         emitter.startScope(scope)
                         emitter.addText(word)
