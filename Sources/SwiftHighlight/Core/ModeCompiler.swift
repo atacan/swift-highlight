@@ -112,9 +112,9 @@ internal final class ModeCompiler {
             return cached
         }
 
-        // Detect cycles - if we're already compiling this exact mode instance, return a placeholder
+        // Detect cycles - return the in-progress compiled mode if available
         if compilingModes.contains(mode.id) {
-            return CompiledMode()
+            return modeCache[mode.id] ?? CompiledMode()
         }
 
         // Mark as being compiled

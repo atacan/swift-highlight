@@ -29,13 +29,14 @@ final class PythonFixtureTests: XCTestCase {
         }
 
         let result = await hljs.highlight(input, language: "python")
-        let actual = result.value
+        let actual = normalizeFixtureOutput(result.value)
+        let expectedNormalized = normalizeFixtureOutput(expected)
 
         // Compare the outputs
-        if actual != expected {
+        if actual != expectedNormalized {
             // Find first difference for better error message
             let actualLines = actual.components(separatedBy: "\n")
-            let expectedLines = expected.components(separatedBy: "\n")
+            let expectedLines = expectedNormalized.components(separatedBy: "\n")
 
             for (i, (actualLine, expectedLine)) in zip(actualLines, expectedLines).enumerated() {
                 if actualLine != expectedLine {
@@ -71,15 +72,16 @@ final class PythonFixtureTests: XCTestCase {
         }
 
         let result = await hljs.highlight(input, language: "python")
-        let actual = result.value
+        let actual = normalizeFixtureOutput(result.value)
+        let expectedNormalized = normalizeFixtureOutput(expected)
 
-        if actual == expected {
+        if actual == expectedNormalized {
             return (true, nil)
         }
 
         // Generate diff
         let actualLines = actual.components(separatedBy: "\n")
-        let expectedLines = expected.components(separatedBy: "\n")
+        let expectedLines = expectedNormalized.components(separatedBy: "\n")
         var diff = ""
 
         let maxLines = max(actualLines.count, expectedLines.count)

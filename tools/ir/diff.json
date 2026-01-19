@@ -5,8 +5,12 @@
     "aliases": [
       "patch"
     ],
+    "disableAutodetect": false,
     "caseInsensitive": false,
+    "unicodeRegex": false,
     "keywords": null,
+    "illegal": null,
+    "classNameAliases": {},
     "contains": [
       {
         "ref": "m1"
@@ -40,6 +44,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 10,
@@ -71,6 +76,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -99,6 +105,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -130,6 +137,7 @@
           "ref": "m4"
         }
       ],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -162,6 +170,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -194,6 +203,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -226,6 +236,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,

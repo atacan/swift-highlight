@@ -15,6 +15,8 @@ TEMPLATE_OVERRIDES = {
     "swift": "Swift.swift",
 }
 
+MAX_INLINE_RECURSION = 2
+
 
 def swift_string(value: str) -> str:
     escaped = (
@@ -392,14 +394,18 @@ def generate_language(ir, lang_id):
     for mode in modes:
         mode_names[mode["id"]] = f"mode_{mode['id']}"
 
-    def pruned_expr(mode_id: str, blocked_set: set, stack=None) -> str:
+    def pruned_expr(mode_id: str, blocked_set: set, stack=None, counts=None) -> str:
         if stack is None:
-            stack = set()
-        if mode_id in stack:
+            stack = []
+        if counts is None:
+            counts = {}
+        depth = counts.get(mode_id, 0)
+        if depth >= MAX_INLINE_RECURSION:
             target = mode_by_id[mode_id]
             return mode_expr(target, {}, shallow=True)
 
-        stack.add(mode_id)
+        counts[mode_id] = depth + 1
+        stack.append(mode_id)
         target = mode_by_id[mode_id]
 
         contains = []
@@ -411,13 +417,13 @@ def generate_language(ir, lang_id):
                 if ref_id == mode_id:
                     contains.append(".self")
                 else:
-                    contains.append(f".mode({pruned_expr(ref_id, blocked_set, stack)})")
+                    contains.append(f".mode({pruned_expr(ref_id, blocked_set, stack, counts)})")
 
         variants = []
         for ref in (target.get("variants") or []):
             if isinstance(ref, dict):
                 ref_id = ref["ref"]
-                variants.append(pruned_expr(ref_id, blocked_set, stack))
+                variants.append(pruned_expr(ref_id, blocked_set, stack, counts))
 
         mode_refs = {}
         if contains:
@@ -428,10 +434,11 @@ def generate_language(ir, lang_id):
         starts = target.get("starts")
         if isinstance(starts, dict) and starts.get("ref"):
             ref_id = starts["ref"]
-            mode_refs["starts"] = f"ModeBox({pruned_expr(ref_id, blocked_set, stack)})"
+            mode_refs["starts"] = f"ModeBox({pruned_expr(ref_id, blocked_set, stack, counts)})"
 
         expr = mode_expr(target, mode_refs, shallow=False)
-        stack.remove(mode_id)
+        stack.pop()
+        counts[mode_id] = depth
         return expr
 
     for mode in modes:

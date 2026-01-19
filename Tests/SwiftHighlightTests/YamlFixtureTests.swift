@@ -1,23 +1,23 @@
 import XCTest
 @testable import SwiftHighlight
 
-/// Tests NGINX highlighting against the original highlight.js test fixtures
-final class NginxFixtureTests: XCTestCase {
+/// Tests YAML highlighting against the original highlight.js test fixtures
+final class YamlFixtureTests: XCTestCase {
 
     var hljs: Highlight!
 
     override func setUp() async throws {
         try await super.setUp()
         hljs = Highlight()
-        await hljs.registerNginx()
+        await hljs.registerYaml()
     }
 
     // MARK: - Fixture Test Runner
 
     /// Runs a fixture test by comparing SwiftHighlight output to expected output
     private func runFixture(_ name: String, file: StaticString = #file, line: UInt = #line) async {
-        guard let inputURL = Bundle.module.url(forResource: name, withExtension: "txt", subdirectory: "Fixtures/nginx"),
-              let expectedURL = Bundle.module.url(forResource: "\(name).expect", withExtension: "txt", subdirectory: "Fixtures/nginx") else {
+        guard let inputURL = Bundle.module.url(forResource: name, withExtension: "txt", subdirectory: "Fixtures/yaml"),
+              let expectedURL = Bundle.module.url(forResource: "\(name).expect", withExtension: "txt", subdirectory: "Fixtures/yaml") else {
             XCTFail("Could not find fixture files for '\(name)'", file: file, line: line)
             return
         }
@@ -28,7 +28,7 @@ final class NginxFixtureTests: XCTestCase {
             return
         }
 
-        let result = await hljs.highlight(input, language: "nginx")
+        let result = await hljs.highlight(input, language: "yaml")
         let actual = normalizeFixtureOutput(result.value)
         let expectedNormalized = normalizeFixtureOutput(expected)
 
@@ -61,7 +61,31 @@ final class NginxFixtureTests: XCTestCase {
 
     // MARK: - Individual Fixture Tests
 
-    func testDefault() async throws {
-        await runFixture("default")
+    func testBlock() async throws {
+        await runFixture("block")
+    }
+
+    func testInline() async throws {
+        await runFixture("inline")
+    }
+
+    func testKeys() async throws {
+        await runFixture("keys")
+    }
+
+    func testNumbers() async throws {
+        await runFixture("numbers")
+    }
+
+    func testSpecialChars() async throws {
+        await runFixture("special_chars")
+    }
+
+    func testString() async throws {
+        await runFixture("string")
+    }
+
+    func testTag() async throws {
+        await runFixture("tag")
     }
 }

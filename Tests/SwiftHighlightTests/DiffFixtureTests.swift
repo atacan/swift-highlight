@@ -1,23 +1,23 @@
 import XCTest
 @testable import SwiftHighlight
 
-/// Tests NGINX highlighting against the original highlight.js test fixtures
-final class NginxFixtureTests: XCTestCase {
+/// Tests Diff highlighting against the original highlight.js test fixtures
+final class DiffFixtureTests: XCTestCase {
 
     var hljs: Highlight!
 
     override func setUp() async throws {
         try await super.setUp()
         hljs = Highlight()
-        await hljs.registerNginx()
+        await hljs.registerDiff()
     }
 
     // MARK: - Fixture Test Runner
 
     /// Runs a fixture test by comparing SwiftHighlight output to expected output
     private func runFixture(_ name: String, file: StaticString = #file, line: UInt = #line) async {
-        guard let inputURL = Bundle.module.url(forResource: name, withExtension: "txt", subdirectory: "Fixtures/nginx"),
-              let expectedURL = Bundle.module.url(forResource: "\(name).expect", withExtension: "txt", subdirectory: "Fixtures/nginx") else {
+        guard let inputURL = Bundle.module.url(forResource: name, withExtension: "txt", subdirectory: "Fixtures/diff"),
+              let expectedURL = Bundle.module.url(forResource: "\(name).expect", withExtension: "txt", subdirectory: "Fixtures/diff") else {
             XCTFail("Could not find fixture files for '\(name)'", file: file, line: line)
             return
         }
@@ -28,7 +28,7 @@ final class NginxFixtureTests: XCTestCase {
             return
         }
 
-        let result = await hljs.highlight(input, language: "nginx")
+        let result = await hljs.highlight(input, language: "diff")
         let actual = normalizeFixtureOutput(result.value)
         let expectedNormalized = normalizeFixtureOutput(expected)
 
@@ -61,7 +61,11 @@ final class NginxFixtureTests: XCTestCase {
 
     // MARK: - Individual Fixture Tests
 
-    func testDefault() async throws {
-        await runFixture("default")
+    func testComments() async throws {
+        await runFixture("comments")
+    }
+
+    func testGitFormatPatch() async throws {
+        await runFixture("git-format-patch")
     }
 }
