@@ -265,6 +265,7 @@ public actor Highlight {
         // Use UTF-16 based indexing to match NSRegularExpression
         var utf16Index = 0
         let codeUTF16 = code.utf16
+        let nsCode = code as NSString
         var resumeScanAtSamePosition = false
 
         // Process continuations - open scopes for modes on the stack
@@ -298,9 +299,8 @@ public actor Highlight {
 
             guard let match = top.matcher?.exec(code) else {
                 // No more matches - add remaining text
-                let startIndex = String.Index(utf16Offset: utf16Index, in: code)
-                if startIndex < code.endIndex {
-                    let remaining = String(code[startIndex...])
+                if utf16Index <= codeUTF16.count {
+                    let remaining = nsCode.substring(from: utf16Index)
                     modeBuffer += remaining
                 }
                 processBuffer(&modeBuffer, emitter: emitter, mode: top, keywordHits: &keywordHits, relevance: &relevance, language: language)
@@ -309,10 +309,9 @@ public actor Highlight {
 
             // Add text before match
             if match.index > utf16Index {
-                let startIndex = String.Index(utf16Offset: utf16Index, in: code)
-                let endIndex = String.Index(utf16Offset: match.index, in: code)
-                if startIndex < endIndex {
-                    let beforeMatch = String(code[startIndex..<endIndex])
+                let length = match.index - utf16Index
+                if length > 0 {
+                    let beforeMatch = nsCode.substring(with: NSRange(location: utf16Index, length: length))
                     modeBuffer += beforeMatch
                 }
             }
@@ -525,7 +524,10 @@ public actor Highlight {
 
         // Use parent's contains if current mode has keywords but empty contains
         // (indicates a .self reference in a keywords + contains mode)
-        let shouldUseParentContains = mode.keywords != nil && mode.contains.isEmpty && mode.parent != nil
+        let shouldUseParentContains = mode.keywords != nil &&
+            mode.contains.isEmpty &&
+            mode.parent != nil &&
+            mode.endsWithParent
         let effectiveContains = shouldUseParentContains
             ? (mode.parent?.contains ?? [])
             : mode.contains
@@ -610,7 +612,10 @@ public actor Highlight {
 
         // Use parent's contains if current mode has keywords but empty contains
         // (indicates a .self reference in a keywords + contains mode)
-        let shouldUseParentContains = mode.keywords != nil && mode.contains.isEmpty && mode.parent != nil
+        let shouldUseParentContains = mode.keywords != nil &&
+            mode.contains.isEmpty &&
+            mode.parent != nil &&
+            mode.endsWithParent
         let effectiveContains = shouldUseParentContains
             ? (mode.parent?.contains ?? [])
             : mode.contains
@@ -829,7 +834,7 @@ public actor Highlight {
         language: CompiledMode,
         code: String
     ) throws -> Int? {
-        let matchPlusRemainder = String(code[code.index(code.startIndex, offsetBy: match.index)...])
+        let matchPlusRemainder = (code as NSString).substring(from: match.index)
 
         guard let endMode = endOfMode(mode: top, match: match, matchPlusRemainder: matchPlusRemainder) else {
             return nil

@@ -5,7 +5,9 @@
     "aliases": [
       "rs"
     ],
+    "disableAutodetect": false,
     "caseInsensitive": false,
+    "unicodeRegex": false,
     "keywords": {
       "pattern": {
         "type": "string",
@@ -138,8 +140,38 @@
         "assert_ne!",
         "debug_assert_ne!"
       ],
+      "type": [
+        "i8",
+        "i16",
+        "i32",
+        "i64",
+        "i128",
+        "isize",
+        "u8",
+        "u16",
+        "u32",
+        "u64",
+        "u128",
+        "usize",
+        "f32",
+        "f64",
+        "str",
+        "char",
+        "bool",
+        "Box",
+        "Option",
+        "Result",
+        "String",
+        "Vec"
+      ],
+      "custom": {},
       "raw": null
     },
+    "illegal": {
+      "type": "string",
+      "source": "</"
+    },
+    "classNameAliases": {},
     "contains": [
       {
         "ref": "m1"
@@ -207,6 +239,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -234,6 +267,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -271,6 +305,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -302,6 +337,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -329,6 +365,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -367,6 +404,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -394,6 +432,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -429,6 +468,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -457,6 +497,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -485,6 +526,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -513,6 +555,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -549,6 +592,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -580,6 +624,7 @@
           "ref": "m12"
         }
       ],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -607,6 +652,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -634,6 +680,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -661,6 +708,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -688,6 +736,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -725,6 +774,7 @@
           "ref": "m18"
         }
       ],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -741,17 +791,22 @@
     {
       "id": "m19",
       "scope": null,
-      "className": {
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "(fn)(\\s+)((r#)?[a-zA-Z_]\\w*)",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": {
         "1": "keyword",
         "3": "title.function"
       },
-      "begin": null,
-      "end": null,
-      "match": null,
-      "beginScope": null,
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -788,6 +843,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -822,6 +878,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -838,18 +895,23 @@
     {
       "id": "m22",
       "scope": null,
-      "className": {
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "(let)(\\s+)((?:mut\\s+)?)((r#)?[a-zA-Z_]\\w*)",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": {
         "1": "keyword",
         "3": "keyword",
         "4": "variable"
       },
-      "begin": null,
-      "end": null,
-      "match": null,
-      "beginScope": null,
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -866,18 +928,23 @@
     {
       "id": "m23",
       "scope": null,
-      "className": {
-        "1": "keyword",
-        "3": "variable",
-        "5": "keyword"
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "(for)(\\s+)((r#)?[a-zA-Z_]\\w*)(\\s+)(in)",
+        "flags": ""
       },
-      "begin": null,
       "end": null,
       "match": null,
-      "beginScope": null,
+      "beginScope": {
+        "1": "keyword",
+        "3": "variable",
+        "6": "keyword"
+      },
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -894,17 +961,22 @@
     {
       "id": "m24",
       "scope": null,
-      "className": {
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "(type)(\\s+)((r#)?[a-zA-Z_]\\w*)",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": {
         "1": "keyword",
         "3": "title.class"
       },
-      "begin": null,
-      "end": null,
-      "match": null,
-      "beginScope": null,
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -921,17 +993,22 @@
     {
       "id": "m25",
       "scope": null,
-      "className": {
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "((?:trait|enum|struct|union|impl|for))(\\s+)((r#)?[a-zA-Z_]\\w*)",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": {
         "1": "keyword",
         "3": "title.class"
       },
-      "begin": null,
-      "end": null,
-      "match": null,
-      "beginScope": null,
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -959,6 +1036,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": {
         "pattern": null,
         "keyword": [
@@ -1030,6 +1108,31 @@
           "assert_ne!",
           "debug_assert_ne!"
         ],
+        "type": [
+          "i8",
+          "i16",
+          "i32",
+          "i64",
+          "i128",
+          "isize",
+          "u8",
+          "u16",
+          "u32",
+          "u64",
+          "u128",
+          "usize",
+          "f32",
+          "f64",
+          "str",
+          "char",
+          "bool",
+          "Box",
+          "Option",
+          "Result",
+          "String",
+          "Vec"
+        ],
+        "custom": {},
         "raw": null
       },
       "illegal": null,
@@ -1058,6 +1161,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -1085,6 +1189,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,

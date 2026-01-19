@@ -5,7 +5,9 @@
     "aliases": [
       "golang"
     ],
+    "disableAutodetect": false,
     "caseInsensitive": false,
+    "unicodeRegex": false,
     "keywords": {
       "pattern": null,
       "keyword": [
@@ -58,8 +60,36 @@
         "recover",
         "delete"
       ],
+      "type": [
+        "bool",
+        "byte",
+        "complex64",
+        "complex128",
+        "error",
+        "float32",
+        "float64",
+        "int8",
+        "int16",
+        "int32",
+        "int64",
+        "string",
+        "uint8",
+        "uint16",
+        "uint32",
+        "uint64",
+        "int",
+        "uint",
+        "uintptr",
+        "rune"
+      ],
+      "custom": {},
       "raw": null
     },
+    "illegal": {
+      "type": "string",
+      "source": "</"
+    },
+    "classNameAliases": {},
     "contains": [
       {
         "ref": "m1"
@@ -100,6 +130,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -127,6 +158,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -164,6 +196,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -195,6 +228,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -222,6 +256,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -259,6 +294,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -286,6 +322,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -320,6 +357,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": {
         "type": "string",
@@ -357,6 +395,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": {
         "type": "string",
@@ -390,6 +429,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -424,6 +464,7 @@
           "ref": "m11"
         }
       ],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -452,6 +493,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -480,6 +522,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -508,6 +551,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -536,6 +580,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -564,6 +609,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -604,6 +650,7 @@
           "ref": "m17"
         }
       ],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -632,6 +679,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -659,6 +707,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -691,6 +740,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": {
         "pattern": null,
         "keyword": [
@@ -743,6 +793,29 @@
           "recover",
           "delete"
         ],
+        "type": [
+          "bool",
+          "byte",
+          "complex64",
+          "complex128",
+          "error",
+          "float32",
+          "float64",
+          "int8",
+          "int16",
+          "int32",
+          "int64",
+          "string",
+          "uint8",
+          "uint16",
+          "uint32",
+          "uint64",
+          "int",
+          "uint",
+          "uintptr",
+          "rune"
+        ],
+        "custom": {},
         "raw": null
       },
       "illegal": {
@@ -782,6 +855,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
