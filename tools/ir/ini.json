@@ -1,0 +1,760 @@
+{
+  "version": 1,
+  "language": {
+    "name": "TOML, also INI",
+    "aliases": [
+      "toml"
+    ],
+    "disableAutodetect": false,
+    "caseInsensitive": true,
+    "unicodeRegex": false,
+    "keywords": null,
+    "illegal": {
+      "type": "regex",
+      "source": "\\S",
+      "flags": ""
+    },
+    "classNameAliases": {},
+    "contains": [
+      {
+        "ref": "m1"
+      },
+      {
+        "ref": "m6"
+      },
+      {
+        "ref": "m7"
+      }
+    ]
+  },
+  "modes": [
+    {
+      "id": "m2",
+      "scope": "doctag",
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "[ ]*(?=(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):)"
+      },
+      "end": {
+        "type": "regex",
+        "source": "(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": 0,
+      "excludeBegin": true,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m3",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "[ ]+((?:I|a|is|so|us|to|at|if|in|it|on|[A-Za-z]+['](d|ve|re|ll|t|s|n)|[A-Za-z]+[-][a-z]+|[A-Za-z][a-z]{2,})[.]?[:]?([.][ ]|[ ])){3}"
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m4",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": ";",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": "$",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m5",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "#",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": "$",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m1",
+      "scope": "comment",
+      "className": null,
+      "begin": null,
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        {
+          "ref": "m2"
+        },
+        {
+          "ref": "m3"
+        }
+      ],
+      "variants": [
+        {
+          "ref": "m4"
+        },
+        {
+          "ref": "m5"
+        }
+      ],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m6",
+      "scope": null,
+      "className": "section",
+      "begin": {
+        "type": "regex",
+        "source": "\\[+",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": "\\]+",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m10",
+      "scope": null,
+      "className": "literal",
+      "begin": {
+        "type": "regex",
+        "source": "\\bon|off|true|false|yes|no\\b",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m12",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "\\$[\\w\\d\"][\\w\\d_]*",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m13",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "\\$\\{(.*?)\\}",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m11",
+      "scope": null,
+      "className": "variable",
+      "begin": null,
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [
+        {
+          "ref": "m12"
+        },
+        {
+          "ref": "m13"
+        }
+      ],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m15",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "\\\\[\\s\\S]"
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": 0,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m16",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "'''"
+      },
+      "end": {
+        "type": "string",
+        "source": "'''"
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": 10,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m17",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "\"\"\""
+      },
+      "end": {
+        "type": "string",
+        "source": "\"\"\""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": 10,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m18",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "\""
+      },
+      "end": {
+        "type": "string",
+        "source": "\""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m19",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "'"
+      },
+      "end": {
+        "type": "string",
+        "source": "'"
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m14",
+      "scope": null,
+      "className": "string",
+      "begin": null,
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        {
+          "ref": "m15"
+        }
+      ],
+      "variants": [
+        {
+          "ref": "m16"
+        },
+        {
+          "ref": "m17"
+        },
+        {
+          "ref": "m18"
+        },
+        {
+          "ref": "m19"
+        }
+      ],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m21",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "([+-]+)?[\\d]+_[\\d_]+",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m22",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "\\b\\d+(\\.\\d+)?"
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m20",
+      "scope": null,
+      "className": "number",
+      "begin": null,
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [
+        {
+          "ref": "m21"
+        },
+        {
+          "ref": "m22"
+        }
+      ],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": 0,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m9",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "\\[",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": "\\]",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        {
+          "ref": "m1"
+        },
+        {
+          "ref": "m10"
+        },
+        {
+          "ref": "m11"
+        },
+        {
+          "ref": "m14"
+        },
+        {
+          "ref": "m20"
+        },
+        "self"
+      ],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": 0,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m8",
+      "scope": null,
+      "className": null,
+      "begin": null,
+      "end": {
+        "type": "regex",
+        "source": "$",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        {
+          "ref": "m1"
+        },
+        {
+          "ref": "m9"
+        },
+        {
+          "ref": "m10"
+        },
+        {
+          "ref": "m11"
+        },
+        {
+          "ref": "m14"
+        },
+        {
+          "ref": "m20"
+        }
+      ],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m7",
+      "scope": null,
+      "className": "attr",
+      "begin": {
+        "type": "string",
+        "source": "(?:[A-Za-z0-9_-]+|\"(\\\\\"|[^\"])*\"|'[^']*')(\\s*\\.\\s*(?:[A-Za-z0-9_-]+|\"(\\\\\"|[^\"])*\"|'[^']*'))*(?=\\s*=\\s*[^#\\s])"
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": {
+        "ref": "m8"
+      },
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    }
+  ]
+}

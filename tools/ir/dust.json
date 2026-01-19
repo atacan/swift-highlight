@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "language": {
+    "name": "Dust",
+    "aliases": [
+      "dst"
+    ],
+    "caseInsensitive": true,
+    "keywords": null,
+    "contains": [
+      {
+        "ref": "m1"
+      },
+      {
+        "ref": "m3"
+      }
+    ]
+  },
+  "modes": [
+    {
+      "id": "m2",
+      "scope": null,
+      "className": "name",
+      "begin": {
+        "type": "regex",
+        "source": "[a-zA-Z\\.-]+",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m1",
+      "scope": null,
+      "className": "template-tag",
+      "begin": {
+        "type": "regex",
+        "source": "\\{[#\\/]",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": "\\}",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        {
+          "ref": "m2"
+        }
+      ],
+      "variants": [],
+      "keywords": null,
+      "illegal": {
+        "type": "regex",
+        "source": ";",
+        "flags": ""
+      },
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m3",
+      "scope": null,
+      "className": "template-variable",
+      "begin": {
+        "type": "regex",
+        "source": "\\{",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": "\\}",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": {
+        "pattern": null,
+        "keyword": [],
+        "literal": [],
+        "built_in": [],
+        "raw": "if eq ne lt lte gt gte select default math sep"
+      },
+      "illegal": {
+        "type": "regex",
+        "source": ";",
+        "flags": ""
+      },
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    }
+  ]
+}

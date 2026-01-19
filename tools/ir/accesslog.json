@@ -1,0 +1,303 @@
+{
+  "version": 1,
+  "language": {
+    "name": "Apache Access Log",
+    "aliases": [],
+    "caseInsensitive": false,
+    "keywords": null,
+    "contains": [
+      {
+        "ref": "m1"
+      },
+      {
+        "ref": "m2"
+      },
+      {
+        "ref": "m3"
+      },
+      {
+        "ref": "m5"
+      },
+      {
+        "ref": "m6"
+      },
+      {
+        "ref": "m7"
+      },
+      {
+        "ref": "m8"
+      }
+    ]
+  },
+  "modes": [
+    {
+      "id": "m1",
+      "scope": null,
+      "className": "number",
+      "begin": {
+        "type": "regex",
+        "source": "^\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}(:\\d{1,5})?\\b",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": 5,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m2",
+      "scope": null,
+      "className": "number",
+      "begin": {
+        "type": "regex",
+        "source": "\\b\\d+\\b",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": 0,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m4",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "HTTP\\/[12]\\.\\d'",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": 5,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m3",
+      "scope": null,
+      "className": "string",
+      "begin": {
+        "type": "string",
+        "source": "\"(?:GET|POST|HEAD|PUT|DELETE|CONNECT|OPTIONS|PATCH|TRACE)"
+      },
+      "end": {
+        "type": "regex",
+        "source": "\"",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        {
+          "ref": "m4"
+        }
+      ],
+      "variants": [],
+      "keywords": {
+        "pattern": null,
+        "keyword": [],
+        "literal": [],
+        "built_in": [],
+        "raw": null
+      },
+      "illegal": {
+        "type": "regex",
+        "source": "\\n",
+        "flags": ""
+      },
+      "relevance": 5,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m5",
+      "scope": null,
+      "className": "string",
+      "begin": {
+        "type": "regex",
+        "source": "\\[\\d[^\\]\\n]{8,}\\]",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": {
+        "type": "regex",
+        "source": "\\n",
+        "flags": ""
+      },
+      "relevance": 1,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m6",
+      "scope": null,
+      "className": "string",
+      "begin": {
+        "type": "regex",
+        "source": "\\[",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": "\\]",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": {
+        "type": "regex",
+        "source": "\\n",
+        "flags": ""
+      },
+      "relevance": 0,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m7",
+      "scope": null,
+      "className": "string",
+      "begin": {
+        "type": "regex",
+        "source": "\"Mozilla\\/\\d\\.\\d \\(",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": "\"",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": {
+        "type": "regex",
+        "source": "\\n",
+        "flags": ""
+      },
+      "relevance": 3,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m8",
+      "scope": null,
+      "className": "string",
+      "begin": {
+        "type": "regex",
+        "source": "\"",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": "\"",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": {
+        "type": "regex",
+        "source": "\\n",
+        "flags": ""
+      },
+      "relevance": 0,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    }
+  ]
+}

@@ -21,7 +21,7 @@ fi
 mkdir -p "$FIXTURES_DIR"
 
 # Languages to sync (add more as needed)
-LANGUAGES=("python" "json" "json5" "swift")
+LANGUAGES=("python" "json" "json5" "swift" "ini" "nginx" "yaml")
 
 echo "Syncing test fixtures from highlight.js..."
 echo "Source: $HIGHLIGHTJS_DIR/test/markup"

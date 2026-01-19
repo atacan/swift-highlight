@@ -1,0 +1,249 @@
+{
+  "version": 1,
+  "language": {
+    "name": "Inform 7",
+    "aliases": [
+      "i7"
+    ],
+    "caseInsensitive": true,
+    "keywords": {
+      "pattern": null,
+      "keyword": [
+        "thing",
+        "room",
+        "person",
+        "man",
+        "woman",
+        "animal",
+        "container",
+        "supporter",
+        "backdrop",
+        "door",
+        "scenery",
+        "open",
+        "closed",
+        "locked",
+        "inside",
+        "gender",
+        "is",
+        "are",
+        "say",
+        "understand",
+        "kind",
+        "of",
+        "rule"
+      ],
+      "literal": [],
+      "built_in": [],
+      "raw": null
+    },
+    "contains": [
+      {
+        "ref": "m1"
+      },
+      {
+        "ref": "m3"
+      },
+      {
+        "ref": "m4"
+      },
+      {
+        "ref": "m6"
+      }
+    ]
+  },
+  "modes": [
+    {
+      "id": "m2",
+      "scope": null,
+      "className": "subst",
+      "begin": {
+        "type": "string",
+        "source": "\\["
+      },
+      "end": {
+        "type": "string",
+        "source": "\\]"
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m1",
+      "scope": null,
+      "className": "string",
+      "begin": {
+        "type": "string",
+        "source": "\""
+      },
+      "end": {
+        "type": "string",
+        "source": "\""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        {
+          "ref": "m2"
+        }
+      ],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": 0,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m3",
+      "scope": null,
+      "className": "section",
+      "begin": {
+        "type": "regex",
+        "source": "^(Volume|Book|Part|Chapter|Section|Table)\\b",
+        "flags": ""
+      },
+      "end": {
+        "type": "string",
+        "source": "$"
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m5",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "\\(This"
+      },
+      "end": {
+        "type": "string",
+        "source": "\\)"
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m4",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "^(Check|Carry out|Report|Instead of|To|Rule|When|Before|After)\\b",
+        "flags": ""
+      },
+      "end": {
+        "type": "string",
+        "source": ":"
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        {
+          "ref": "m5"
+        }
+      ],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m6",
+      "scope": null,
+      "className": "comment",
+      "begin": {
+        "type": "string",
+        "source": "\\["
+      },
+      "end": {
+        "type": "string",
+        "source": "\\]"
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        "self"
+      ],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    }
+  ]
+}

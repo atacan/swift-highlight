@@ -7,3 +7,4 @@
 # Test fixtures are synced from highlight.js submodule via scripts/sync-fixtures.sh
 Tests/SwiftHighlightTests/Fixtures/*
 !Tests/SwiftHighlightTests/Fixtures/.gitkeep
+tools/__pycache__/

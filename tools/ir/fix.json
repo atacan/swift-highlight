@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "language": {
+    "name": "FIX",
+    "aliases": [],
+    "caseInsensitive": true,
+    "keywords": null,
+    "contains": [
+      {
+        "ref": "m1"
+      }
+    ]
+  },
+  "modes": [
+    {
+      "id": "m2",
+      "scope": null,
+      "className": "attr",
+      "begin": {
+        "type": "regex",
+        "source": "([^\\u2401\\u0001=]+)",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": "=([^\\u2401\\u0001=]+)",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": true,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m3",
+      "scope": null,
+      "className": "string",
+      "begin": {
+        "type": "regex",
+        "source": "=",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": "([\\u2401\\u0001])",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": true,
+      "excludeEnd": true,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m1",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "[^\\u2401\\u0001]+",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": "[\\u2401\\u0001]",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        {
+          "ref": "m2"
+        },
+        {
+          "ref": "m3"
+        }
+      ],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": true,
+      "returnBegin": true,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    }
+  ]
+}

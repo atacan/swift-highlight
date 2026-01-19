@@ -1,0 +1,403 @@
+{
+  "version": 1,
+  "language": {
+    "name": "Packet Filter config",
+    "aliases": [
+      "pf.conf"
+    ],
+    "caseInsensitive": false,
+    "keywords": {
+      "pattern": {
+        "type": "regex",
+        "source": "[a-z0-9_<>-]+",
+        "flags": ""
+      },
+      "keyword": [
+        "in",
+        "out",
+        "log",
+        "quick",
+        "on",
+        "rdomain",
+        "inet",
+        "inet6",
+        "proto",
+        "from",
+        "port",
+        "os",
+        "to",
+        "route",
+        "allow-opts",
+        "divert-packet",
+        "divert-reply",
+        "divert-to",
+        "flags",
+        "group",
+        "icmp-type",
+        "icmp6-type",
+        "label",
+        "once",
+        "probability",
+        "recieved-on",
+        "rtable",
+        "prio",
+        "queue",
+        "tos",
+        "tag",
+        "tagged",
+        "user",
+        "keep",
+        "fragment",
+        "for",
+        "os",
+        "drop",
+        "af-to|10",
+        "binat-to|10",
+        "nat-to|10",
+        "rdr-to|10",
+        "bitmask",
+        "least-stats",
+        "random",
+        "round-robin",
+        "source-hash",
+        "static-port",
+        "dup-to",
+        "reply-to",
+        "route-to",
+        "parent",
+        "bandwidth",
+        "default",
+        "min",
+        "max",
+        "qlimit",
+        "block-policy",
+        "debug",
+        "fingerprints",
+        "hostid",
+        "limit",
+        "loginterface",
+        "optimization",
+        "reassemble",
+        "ruleset-optimization",
+        "basic",
+        "none",
+        "profile",
+        "skip",
+        "state-defaults",
+        "state-policy",
+        "timeout",
+        "const",
+        "counters",
+        "persist",
+        "no",
+        "modulate",
+        "synproxy",
+        "state|5",
+        "floating",
+        "if-bound",
+        "no-sync",
+        "pflow|10",
+        "sloppy",
+        "source-track",
+        "global",
+        "rule",
+        "max-src-nodes",
+        "max-src-states",
+        "max-src-conn",
+        "max-src-conn-rate",
+        "overload",
+        "flush",
+        "scrub|5",
+        "max-mss",
+        "min-ttl",
+        "no-df|10",
+        "random-id"
+      ],
+      "literal": [
+        "all",
+        "any",
+        "no-route",
+        "self",
+        "urpf-failed",
+        "egress|5",
+        "unknown"
+      ],
+      "built_in": [
+        "block",
+        "match",
+        "pass",
+        "load",
+        "anchor|5",
+        "antispoof|10",
+        "set",
+        "table"
+      ],
+      "raw": null
+    },
+    "contains": [
+      {
+        "ref": "m1"
+      },
+      {
+        "ref": "m4"
+      },
+      {
+        "ref": "m5"
+      },
+      {
+        "ref": "m7"
+      },
+      {
+        "ref": "m8"
+      }
+    ]
+  },
+  "modes": [
+    {
+      "id": "m2",
+      "scope": "doctag",
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "[ ]*(?=(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):)"
+      },
+      "end": {
+        "type": "regex",
+        "source": "(TODO|FIXME|NOTE|BUG|OPTIMIZE|HACK|XXX):",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": 0,
+      "excludeBegin": true,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m3",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "[ ]+((?:I|a|is|so|us|to|at|if|in|it|on|[A-Za-z]+['](d|ve|re|ll|t|s|n)|[A-Za-z]+[-][a-z]+|[A-Za-z][a-z]{2,})[.]?[:]?([.][ ]|[ ])){3}"
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m1",
+      "scope": "comment",
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "#"
+      },
+      "end": {
+        "type": "string",
+        "source": "$"
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        {
+          "ref": "m2"
+        },
+        {
+          "ref": "m3"
+        }
+      ],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m4",
+      "scope": "number",
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "\\b\\d+(\\.\\d+)?"
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": 0,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m6",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "\\\\[\\s\\S]"
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": 0,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m5",
+      "scope": "string",
+      "className": null,
+      "begin": {
+        "type": "string",
+        "source": "\""
+      },
+      "end": {
+        "type": "string",
+        "source": "\""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        {
+          "ref": "m6"
+        }
+      ],
+      "variants": [],
+      "keywords": null,
+      "illegal": {
+        "type": "string",
+        "source": "\\n"
+      },
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m7",
+      "scope": null,
+      "className": "variable",
+      "begin": {
+        "type": "regex",
+        "source": "\\$[\\w\\d#@][\\w\\d_]*",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": 0,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m8",
+      "scope": null,
+      "className": "variable",
+      "begin": {
+        "type": "regex",
+        "source": "<(?!\\/)",
+        "flags": ""
+      },
+      "end": {
+        "type": "regex",
+        "source": ">",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    }
+  ]
+}

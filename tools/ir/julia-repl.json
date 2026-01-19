@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "language": {
+    "name": "Julia REPL",
+    "aliases": [
+      "jldoctest"
+    ],
+    "caseInsensitive": false,
+    "keywords": null,
+    "contains": [
+      {
+        "ref": "m1"
+      }
+    ]
+  },
+  "modes": [
+    {
+      "id": "m1",
+      "scope": null,
+      "className": "meta.prompt",
+      "begin": {
+        "type": "regex",
+        "source": "^julia>",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "keywords": null,
+      "illegal": null,
+      "relevance": 10,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    }
+  ]
+}

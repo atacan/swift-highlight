@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "language": {
+    "name": "Plain text",
+    "aliases": [
+      "text",
+      "txt"
+    ],
+    "caseInsensitive": false,
+    "keywords": null,
+    "contains": []
+  },
+  "modes": []
+}

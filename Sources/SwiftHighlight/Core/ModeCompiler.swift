@@ -207,7 +207,7 @@ internal final class ModeCompiler {
         if let variants = mode.variants {
             for variantBox in variants {
                 let merged = mergeMode(mode, variantBox.value)
-                containsModes.append(contentsOf: expandContains(merged.contains, selfMode: effectiveSelfMode))
+                containsModes.append(contentsOf: expandContains(merged.contains, selfMode: merged))
             }
         } else {
             containsModes = expandContains(mode.contains, selfMode: effectiveSelfMode)
@@ -215,14 +215,14 @@ internal final class ModeCompiler {
 
         // Compile contains
         for childMode in containsModes {
-            let compiled = compileMode(childMode, parent: cmode, depth: depth + 1, selfMode: effectiveSelfMode)
+            let compiled = compileMode(childMode, parent: cmode, depth: depth + 1, selfMode: nil)
             compiled.parent = cmode
             cmode.contains.append(compiled)
         }
 
         // Compile starts
         if let startsBox = mode.starts {
-            cmode.starts = compileMode(startsBox.value, parent: parent, depth: depth + 1, selfMode: effectiveSelfMode)
+            cmode.starts = compileMode(startsBox.value, parent: parent, depth: depth + 1, selfMode: nil)
         }
 
         // Build matcher
