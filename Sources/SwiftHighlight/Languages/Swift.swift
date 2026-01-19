@@ -237,6 +237,16 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
         match: .string(#"\b(Any|Self)\b"#)
     )
 
+    let keywordModes: [ModeReference] = [
+        .mode(dotKeyword),
+        .mode(keywordGuard),
+        .mode(regexKeyword),
+        .mode(accessSetKeyword),
+        .mode(unownedKeyword),
+        .mode(keywordTypes),
+        .mode(optionalDotKeyword)
+    ]
+
     // MARK: - Built-ins
 
     // Guard against .builtIn (e.g., array.min)
@@ -251,20 +261,16 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
         match: .string(#"\b("# + builtInList.joined(separator: "|") + #")(?=\()"#)
     )
 
+    let builtIns: [ModeReference] = [
+        .mode(builtInGuard),
+        .mode(builtIn)
+    ]
+
     // MARK: - Operators
 
     // Guard against -> being highlighted as operator
     let operatorGuard = Mode(
         match: .string("->"),
-        relevance: 0
-    )
-
-    // Guard against < and > in generic contexts
-    // Prevents highlighting generic brackets as operators
-    // Matches < before type names or keywords, > before specific punctuation without space
-    // For >>, only guards when followed by closing punctuation (nested generics), not by space (operator)
-    let genericBracketGuard = Mode(
-        match: .string(#"<(?=\s*[A-Z_])|<(?=\s*\b(each|repeat|some|any|Self|borrowing|consuming|isolated)\b)|>(?=[(,)\]:{])|>>(?=[(,)\]:{])|>$|>>$"#),
         relevance: 0
     )
 
@@ -277,6 +283,11 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
         ],
         relevance: 0
     )
+
+    let operators: [ModeReference] = [
+        .mode(operatorGuard),
+        .mode(operatorMode)
+    ]
 
     // MARK: - Strings (defined here so interpolation can reference number, operator, etc.)
 
@@ -312,26 +323,34 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
             ]
         )
 
+        let identifierKeywordList = (keywordList + literals).filter {
+            $0.range(of: #"^[A-Za-z_][A-Za-z_0-9]*$"#, options: .regularExpression) != nil
+        }
+        let identifierKeywordAlternation = identifierKeywordList.joined(separator: "|")
+        let identifierKeywordExclusion = identifierKeywordAlternation.isEmpty
+            ? ""
+            : #"(?!\#(identifierKeywordAlternation)\b)"#
+        let plainIdentifier = Mode(
+            match: .string(#"\b\#(identifierKeywordExclusion)\#(identifier)\b"#),
+            relevance: 0
+        )
+
+        let submodes: [ModeReference] = keywordModes + builtIns + [
+            .mode(number),
+            .mode(plainIdentifier)
+        ] + operators + [
+            .mode(stringInInterpolation),
+            .mode(quotedIdentifier),
+            .mode(implicitParameter),
+            .mode(propertyWrapperProjection)
+        ]
+
         // Nested parentheses mode to prevent premature end while preserving content highlighting
         let nestedParens = Mode(
             begin: .string(#"\("#),
             end: .string(#"\)"#),
             keywords: keywords,
-            contains: [
-                .self,
-                .mode(number),
-                .mode(implicitParameter),
-                .mode(propertyWrapperProjection),
-                .mode(keywordTypes),
-                .mode(regexKeyword),
-                .mode(operatorGuard),
-                .mode(genericBracketGuard),
-                .mode(operatorMode),
-                .mode(builtInGuard),
-                .mode(builtIn),
-                .mode(quotedIdentifier),
-                .mode(stringInInterpolation)
-            ],
+            contains: [.self] + submodes,
             excludeBegin: true,
             excludeEnd: true
         )
@@ -341,21 +360,7 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
             begin: .string(#"\\\#(rawDelimiter)\("#),
             end: .string(#"\)"#),
             keywords: keywords,
-            contains: [
-                .mode(number),
-                .mode(implicitParameter),
-                .mode(propertyWrapperProjection),
-                .mode(keywordTypes),
-                .mode(regexKeyword),
-                .mode(operatorGuard),
-                .mode(genericBracketGuard),
-                .mode(operatorMode),
-                .mode(builtInGuard),
-                .mode(builtIn),
-                .mode(quotedIdentifier),
-                .mode(stringInInterpolation),
-                .mode(nestedParens)
-            ]
+            contains: submodes + [.mode(nestedParens)]
         )
     }
 
@@ -412,7 +417,6 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
                     keywords: Keywords(keyword: availabilityKeywordList),
                     contains: [
                         .mode(operatorGuard),
-                        .mode(genericBracketGuard),
                         .mode(operatorMode),
                         .mode(number),
                         .mode(stringMode)
@@ -484,7 +488,7 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
     // Generic arguments <T, U>
     let genericArguments = Mode(
         begin: .string("<"),
-        end: .string(">"),
+        end: .string(#">+"#),
         keywords: keywords,
         contains: [
             .mode(lineComment),
@@ -544,62 +548,21 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
         ]
     )
 
-    // Function parameter names - simple patterns without lookbehind for testing
-    // Note: These will match too liberally but let's see if they show up in the contains list
-
-    // Single parameter name: `name:`
+    // Function parameter names - match single and external/internal names
     let functionParameterName = Mode(
-        scope: "params",
-        match: .string(#"\b\#(identifier)\s*:"#),
-        relevance: 0
-    )
-
-    // Underscore parameter: `_:`
-    let functionParameterUnderscore = Mode(
-        scope: "keyword",
-        match: .string(#"\b_\s*:"#),
-        relevance: 0
-    )
-
-    // Two-name parameter: `external internal:` (must be first for precedence)
-    let functionParameterExternalInternal = Mode(
-        match: .string(#"\b(\#(identifier))\s+(\#(identifier))\s*:"#),
-        relevance: 0,
-        beginScope: .indexed([1: "params", 2: "params"])
-    )
-
-    // Function parameters (...)
-    let functionParameters = Mode(
-        begin: .string(#"\("#),
-        end: .string(#"\)"#),
-        keywords: keywords,
-        illegal: .string(#"[\"']"#),
+        begin: .string(#"(?=\#(identifier)\s*:|\#(identifier)\s+\#(identifier)\s*:)"#),
+        end: .string(#":"#),
         contains: [
-            .mode(functionParameterExternalInternal), // Must be first for precedence
-            .mode(functionParameterUnderscore),
-            .mode(functionParameterName),
-            .mode(lineComment),
-            .mode(blockComment),
-            .mode(dotKeyword),
-            .mode(keywordGuard),
-            .mode(regexKeyword),
-            .mode(accessSetKeyword),
-            .mode(unownedKeyword),
-            .mode(keywordTypes),
-            .mode(operatorGuard),
-            .mode(genericBracketGuard),
-            .mode(dotNumber),
-            .mode(operatorMode),
-            .mode(number),
-            .mode(stringMode),
-            .mode(availableAttribute),
-            .mode(objcWithNameAttribute),
-            .mode(conventionAttribute),
-            .mode(keywordAttribute),
-            .mode(userAttribute),
-            .mode(typeMode)
+            .mode(Mode(
+                scope: "keyword",
+                match: .string(#"\b_\b"#)
+            )),
+            .mode(Mode(
+                scope: "params",
+                match: .string(identifier)
+            ))
         ],
-        endsParent: true
+        relevance: 0
     )
 
     // Tuple mode
@@ -621,7 +584,6 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
             .mode(builtInGuard),
             .mode(builtIn),
             .mode(operatorGuard),
-            .mode(genericBracketGuard),
             .mode(dotNumber),
             .mode(operatorMode),
             .mode(number),
@@ -639,6 +601,38 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
         relevance: 0
     )
 
+    // Function parameters (...)
+    let functionParameters = Mode(
+        begin: .string(#"\("#),
+        end: .string(#"\)"#),
+        keywords: keywords,
+        illegal: .string(#"[\"']"#),
+        contains: [
+            .mode(functionParameterName),
+            .mode(lineComment),
+            .mode(blockComment),
+            .mode(dotKeyword),
+            .mode(keywordGuard),
+            .mode(regexKeyword),
+            .mode(accessSetKeyword),
+            .mode(unownedKeyword),
+            .mode(keywordTypes),
+            .mode(operatorGuard),
+            .mode(dotNumber),
+            .mode(operatorMode),
+            .mode(number),
+            .mode(stringMode),
+            .mode(availableAttribute),
+            .mode(objcWithNameAttribute),
+            .mode(conventionAttribute),
+            .mode(keywordAttribute),
+            .mode(userAttribute),
+            .mode(typeMode),
+            .mode(tuple)
+        ],
+        endsParent: true
+    )
+
     // MARK: - Declarations
 
     // func and macro declarations
@@ -649,6 +643,7 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
             .mode(genericParameters),
             .mode(functionParameters)
         ],
+        endsWithParent: true,
         beginScope: .indexed([1: "keyword", 2: "title.function"])
     )
 
@@ -773,7 +768,6 @@ public func swiftLanguage(_ hljs: Highlight) -> Language {
             .mode(builtInGuard),
             .mode(builtIn),
             .mode(operatorGuard),
-            .mode(genericBracketGuard),
             .mode(operatorMode),
             .mode(number),
             .mode(stringMode),
