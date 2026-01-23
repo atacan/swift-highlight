@@ -267,6 +267,8 @@ public actor Highlight {
         let codeUTF16 = code.utf16
         let nsCode = code as NSString
         var resumeScanAtSamePosition = false
+        var lastMatchType: MatchType?
+        var lastMatchIndex: Int?
 
         // Process continuations - open scopes for modes on the stack
         var current: CompiledMode? = top
@@ -316,10 +318,27 @@ public actor Highlight {
                 }
             }
 
-            // Process the match
             let lexeme = match[0] ?? ""
             let lexemeUTF16Length = lexeme.utf16.count
             let processedCount: Int
+
+
+
+            // Avoid infinite loops on zero-width begin/end at the same index.
+            if lastMatchType == .begin,
+               match.type == .end,
+               lastMatchIndex == match.index,
+               lexemeUTF16Length == 0 {
+                if utf16Index < codeUTF16.count {
+                    let nextChar = nsCode.substring(with: NSRange(location: utf16Index, length: 1))
+                    modeBuffer += nextChar
+                }
+                utf16Index = min(utf16Index + 1, codeUTF16.count)
+                continue
+            }
+
+            lastMatchType = match.type
+            lastMatchIndex = match.index
 
             switch match.type {
             case .begin:
@@ -715,9 +734,8 @@ public actor Highlight {
                 emitter.addText(text)
                 return
             }
-            let result = highlight(text, language: langName, ignoreIllegals: true)
-            // Would need to add sublanguage emitter
-            emitter.addText(result.value)
+            let result = parse(text, language: langName, ignoreIllegals: true)
+            emitter.addSublanguage(result.tokenTree, name: langName)
             if mode.relevance > 0 {
                 relevance += result.relevance
             }

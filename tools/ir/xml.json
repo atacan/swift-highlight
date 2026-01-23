@@ -14,8 +14,12 @@
       "wsf",
       "svg"
     ],
+    "disableAutodetect": false,
     "caseInsensitive": true,
+    "unicodeRegex": true,
     "keywords": null,
+    "illegal": null,
+    "classNameAliases": {},
     "contains": [
       {
         "ref": "m1"
@@ -36,16 +40,16 @@
         "ref": "m18"
       },
       {
-        "ref": "m26"
-      },
-      {
         "ref": "m27"
       },
       {
-        "ref": "m28"
+        "ref": "m29"
       },
       {
         "ref": "m30"
+      },
+      {
+        "ref": "m32"
       }
     ]
   },
@@ -65,6 +69,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": {
         "type": "regex",
@@ -101,6 +106,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -128,6 +134,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -162,6 +169,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": {
         "type": "string",
@@ -199,6 +207,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": {
         "type": "string",
@@ -238,6 +247,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -283,6 +293,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -319,6 +330,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -367,6 +379,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 10,
@@ -398,6 +411,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -425,6 +439,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -464,6 +479,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 10,
@@ -496,6 +512,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 10,
@@ -524,6 +541,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -556,6 +574,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 10,
@@ -584,6 +603,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -619,6 +639,7 @@
           "ref": "m17"
         }
       ],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -633,7 +654,39 @@
       "beginKeywords": null
     },
     {
-      "id": "m20",
+      "id": "m19",
+      "scope": null,
+      "className": null,
+      "begin": null,
+      "end": {
+        "type": "regex",
+        "source": "<\\/style>",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": true,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": [
+        "css",
+        "xml"
+      ],
+      "beginKeywords": null
+    },
+    {
+      "id": "m21",
       "scope": null,
       "className": "attr",
       "begin": {
@@ -647,45 +700,10 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
-      "excludeBegin": false,
-      "excludeEnd": false,
-      "returnBegin": false,
-      "returnEnd": false,
-      "endsWithParent": false,
-      "endsParent": false,
-      "skip": false,
-      "subLanguage": null,
-      "beginKeywords": null
-    },
-    {
-      "id": "m23",
-      "scope": null,
-      "className": null,
-      "begin": {
-        "type": "regex",
-        "source": "\"",
-        "flags": ""
-      },
-      "end": {
-        "type": "regex",
-        "source": "\"",
-        "flags": ""
-      },
-      "match": null,
-      "beginScope": null,
-      "endScope": null,
-      "contains": [
-        {
-          "ref": "m14"
-        }
-      ],
-      "variants": [],
-      "keywords": null,
-      "illegal": null,
-      "relevance": null,
       "excludeBegin": false,
       "excludeEnd": false,
       "returnBegin": false,
@@ -702,12 +720,12 @@
       "className": null,
       "begin": {
         "type": "regex",
-        "source": "'",
+        "source": "\"",
         "flags": ""
       },
       "end": {
         "type": "regex",
-        "source": "'",
+        "source": "\"",
         "flags": ""
       },
       "match": null,
@@ -719,6 +737,7 @@
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -738,15 +757,24 @@
       "className": null,
       "begin": {
         "type": "regex",
-        "source": "[^\\s\"'=<>`]+",
+        "source": "'",
         "flags": ""
       },
-      "end": null,
+      "end": {
+        "type": "regex",
+        "source": "'",
+        "flags": ""
+      },
       "match": null,
       "beginScope": null,
       "endScope": null,
-      "contains": [],
+      "contains": [
+        {
+          "ref": "m14"
+        }
+      ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -761,7 +789,36 @@
       "beginKeywords": null
     },
     {
-      "id": "m22",
+      "id": "m26",
+      "scope": null,
+      "className": null,
+      "begin": {
+        "type": "regex",
+        "source": "[^\\s\"'=<>`]+",
+        "flags": ""
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m23",
       "scope": null,
       "className": "string",
       "begin": null,
@@ -772,15 +829,16 @@
       "contains": [],
       "variants": [
         {
-          "ref": "m23"
-        },
-        {
           "ref": "m24"
         },
         {
           "ref": "m25"
+        },
+        {
+          "ref": "m26"
         }
       ],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -795,7 +853,7 @@
       "beginKeywords": null
     },
     {
-      "id": "m21",
+      "id": "m22",
       "scope": null,
       "className": null,
       "begin": {
@@ -809,10 +867,11 @@
       "endScope": null,
       "contains": [
         {
-          "ref": "m22"
+          "ref": "m23"
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -827,7 +886,7 @@
       "beginKeywords": null
     },
     {
-      "id": "m19",
+      "id": "m20",
       "scope": null,
       "className": null,
       "begin": null,
@@ -837,13 +896,14 @@
       "endScope": null,
       "contains": [
         {
-          "ref": "m20"
+          "ref": "m21"
         },
         {
-          "ref": "m21"
+          "ref": "m22"
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": {
         "type": "regex",
@@ -880,15 +940,24 @@
       "endScope": null,
       "contains": [
         {
-          "ref": "m19"
+          "ref": "m20"
         }
       ],
       "variants": [],
+      "starts": {
+        "ref": "m19"
+      },
       "keywords": {
         "pattern": null,
         "keyword": [],
         "literal": [],
         "built_in": [],
+        "type": [],
+        "custom": {
+          "name": [
+            "style"
+          ]
+        },
         "raw": null
       },
       "illegal": null,
@@ -904,7 +973,40 @@
       "beginKeywords": null
     },
     {
-      "id": "m26",
+      "id": "m28",
+      "scope": null,
+      "className": null,
+      "begin": null,
+      "end": {
+        "type": "regex",
+        "source": "<\\/script>",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": true,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": [
+        "javascript",
+        "handlebars",
+        "xml"
+      ],
+      "beginKeywords": null
+    },
+    {
+      "id": "m27",
       "scope": null,
       "className": "tag",
       "begin": {
@@ -922,15 +1024,24 @@
       "endScope": null,
       "contains": [
         {
-          "ref": "m19"
+          "ref": "m20"
         }
       ],
       "variants": [],
+      "starts": {
+        "ref": "m28"
+      },
       "keywords": {
         "pattern": null,
         "keyword": [],
         "literal": [],
         "built_in": [],
+        "type": [],
+        "custom": {
+          "name": [
+            "script"
+          ]
+        },
         "raw": null
       },
       "illegal": null,
@@ -946,7 +1057,7 @@
       "beginKeywords": null
     },
     {
-      "id": "m27",
+      "id": "m29",
       "scope": null,
       "className": "tag",
       "begin": {
@@ -960,68 +1071,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
-      "keywords": null,
-      "illegal": null,
-      "relevance": null,
-      "excludeBegin": false,
-      "excludeEnd": false,
-      "returnBegin": false,
-      "returnEnd": false,
-      "endsWithParent": false,
-      "endsParent": false,
-      "skip": false,
-      "subLanguage": null,
-      "beginKeywords": null
-    },
-    {
-      "id": "m29",
-      "scope": null,
-      "className": "name",
-      "begin": {
-        "type": "string",
-        "source": "[\\p{L}_](?:[\\p{L}0-9_.-]*:)?[\\p{L}0-9_.-]*"
-      },
-      "end": null,
-      "match": null,
-      "beginScope": null,
-      "endScope": null,
-      "contains": [],
-      "variants": [],
-      "keywords": null,
-      "illegal": null,
-      "relevance": 0,
-      "excludeBegin": false,
-      "excludeEnd": false,
-      "returnBegin": false,
-      "returnEnd": false,
-      "endsWithParent": false,
-      "endsParent": false,
-      "skip": false,
-      "subLanguage": null,
-      "beginKeywords": null
-    },
-    {
-      "id": "m28",
-      "scope": null,
-      "className": "tag",
-      "begin": {
-        "type": "string",
-        "source": "<(?=[\\p{L}_](?:[\\p{L}0-9_.-]*:)?[\\p{L}0-9_.-]*(?:\\/>|>|\\s))"
-      },
-      "end": {
-        "type": "regex",
-        "source": "\\/?>",
-        "flags": ""
-      },
-      "match": null,
-      "beginScope": null,
-      "endScope": null,
-      "contains": [
-        {
-          "ref": "m29"
-        }
-      ],
-      "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
@@ -1049,6 +1099,9 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": {
+        "ref": "m20"
+      },
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -1063,7 +1116,71 @@
       "beginKeywords": null
     },
     {
-      "id": "m32",
+      "id": "m30",
+      "scope": null,
+      "className": "tag",
+      "begin": {
+        "type": "string",
+        "source": "<(?=[\\p{L}_](?:[\\p{L}0-9_.-]*:)?[\\p{L}0-9_.-]*(?:\\/>|>|\\s))"
+      },
+      "end": {
+        "type": "regex",
+        "source": "\\/?>",
+        "flags": ""
+      },
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [
+        {
+          "ref": "m31"
+        }
+      ],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": null,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m33",
+      "scope": null,
+      "className": "name",
+      "begin": {
+        "type": "string",
+        "source": "[\\p{L}_](?:[\\p{L}0-9_.-]*:)?[\\p{L}0-9_.-]*"
+      },
+      "end": null,
+      "match": null,
+      "beginScope": null,
+      "endScope": null,
+      "contains": [],
+      "variants": [],
+      "starts": null,
+      "keywords": null,
+      "illegal": null,
+      "relevance": 0,
+      "excludeBegin": false,
+      "excludeEnd": false,
+      "returnBegin": false,
+      "returnEnd": false,
+      "endsWithParent": false,
+      "endsParent": false,
+      "skip": false,
+      "subLanguage": null,
+      "beginKeywords": null
+    },
+    {
+      "id": "m34",
       "scope": null,
       "className": null,
       "begin": {
@@ -1077,6 +1194,7 @@
       "endScope": null,
       "contains": [],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": 0,
@@ -1091,7 +1209,7 @@
       "beginKeywords": null
     },
     {
-      "id": "m30",
+      "id": "m32",
       "scope": null,
       "className": "tag",
       "begin": {
@@ -1104,13 +1222,14 @@
       "endScope": null,
       "contains": [
         {
-          "ref": "m31"
+          "ref": "m33"
         },
         {
-          "ref": "m32"
+          "ref": "m34"
         }
       ],
       "variants": [],
+      "starts": null,
       "keywords": null,
       "illegal": null,
       "relevance": null,
