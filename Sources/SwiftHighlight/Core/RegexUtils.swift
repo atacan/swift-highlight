@@ -82,11 +82,9 @@ public enum Regex {
     /// Rewrites backreferences when joining multiple patterns
     /// Each pattern is wrapped in a capture group and backreferences are adjusted
     public static func rewriteBackreferences(_ patterns: [String], joinWith separator: String) -> String {
-        // Regex to find backreferences and capture groups
-        // Matches: [...] elements, escape sequences, non-capturing groups, or backreferences
+        // Matches: character classes, parentheses (capturing or not), backreferences, or escapes.
         let backrefPattern = #"\[(?:[^\\\]]|\\.)*\]|\(\??|\\([1-9][0-9]*)|\\."#
         guard let backrefRE = try? NSRegularExpression(pattern: backrefPattern, options: []) else {
-            // Fallback: just join without rewriting
             return patterns.map { "(\($0))" }.joined(separator: separator)
         }
 
@@ -105,35 +103,30 @@ public enum Regex {
                     output += remaining
                     break
                 }
-
                 guard let matchRange = Range(match.range, in: remaining) else {
                     output += remaining
                     break
                 }
+
                 output += String(remaining[..<matchRange.lowerBound])
 
                 let matchedText = String(remaining[matchRange])
-                remaining = String(remaining[matchRange.upperBound...])
-
-                // Check if this is a backreference
-                if matchedText.hasPrefix("\\"),
-                   match.range(at: 1).location != NSNotFound,
-                   Range(match.range(at: 1), in: remaining) != nil {
-                    // This is a backreference - need to look at original remaining
-                    let originalRemaining = pattern.suffix(from: pattern.index(pattern.startIndex, offsetBy: pattern.count - remaining.count - matchedText.count))
-                    let fullMatch = String(originalRemaining[..<originalRemaining.index(originalRemaining.startIndex, offsetBy: matchedText.count)])
-                    if fullMatch.hasPrefix("\\") && fullMatch.count > 1 {
-                        let numStr = String(fullMatch.dropFirst())
-                        if let num = Int(numStr) {
-                            output += "\\\(num + offset)"
-                            continue
-                        }
-                    }
+                var backrefNumber: Int?
+                if match.range(at: 1).location != NSNotFound,
+                   let backrefRange = Range(match.range(at: 1), in: remaining) {
+                    backrefNumber = Int(remaining[backrefRange])
                 }
 
-                output += matchedText
-                if matchedText == "(" {
-                    numCaptures += 1
+                remaining = String(remaining[matchRange.upperBound...])
+
+                if matchedText.hasPrefix("\\"),
+                   let number = backrefNumber {
+                    output += "\\\(number + offset)"
+                } else {
+                    output += matchedText
+                    if matchedText == "(" {
+                        numCaptures += 1
+                    }
                 }
             }
 

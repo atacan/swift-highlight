@@ -144,9 +144,27 @@ internal final class TokenTreeEmitter {
         top.children.append(.scope(node))
     }
 
+    /// Adds a sublanguage token tree
+    func addSublanguage(_ tree: TokenTree, name: String?) {
+        let node = MutableScopeNode(scope: name.map { "language:\($0)" })
+        node.children = tree.root.children.map { thaw($0) }
+        top.children.append(.scope(node))
+    }
+
     /// Finalizes the tree
     func finalize() {
         closeAllNodes()
+    }
+
+    private func thaw(_ node: TokenNode) -> MutableTokenNode {
+        switch node {
+        case .text(let text):
+            return .text(text)
+        case .scope(let scopeNode):
+            let child = MutableScopeNode(scope: scopeNode.scope, language: scopeNode.language)
+            child.children = scopeNode.children.map { thaw($0) }
+            return .scope(child)
+        }
     }
 
     /// Renders the tree to HTML using the public HTMLRenderer

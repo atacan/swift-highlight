@@ -21,7 +21,7 @@ fi
 mkdir -p "$FIXTURES_DIR"
 
 # Languages to sync (add more as needed)
-LANGUAGES=("python" "json" "json5")
+LANGUAGES=("python" "json" "json5" "swift" "ini" "nginx" "yaml" "diff" "go" "rust" "markdown")
 
 echo "Syncing test fixtures from highlight.js..."
 echo "Source: $HIGHLIGHTJS_DIR/test/markup"
@@ -58,6 +58,18 @@ echo "Applying SwiftHighlight-specific fixture patches..."
 if [ -f "$FIXTURES_DIR/python/class_self.expect.txt" ]; then
     perl -pi -e 'chomp if eof' "$FIXTURES_DIR/python/class_self.expect.txt"
     echo "  ✓ Fixed class_self.expect.txt trailing newline"
+fi
+
+# Fix ownership.expect.txt - remove trailing newline to match input
+if [ -f "$FIXTURES_DIR/swift/ownership.expect.txt" ]; then
+    perl -pi -e 'chomp if eof' "$FIXTURES_DIR/swift/ownership.expect.txt"
+    echo "  ✓ Fixed ownership.expect.txt trailing newline"
+fi
+
+# Fix tuples.expect.txt - add trailing newline to match input
+if [ -f "$FIXTURES_DIR/swift/tuples.expect.txt" ]; then
+    echo "" >> "$FIXTURES_DIR/swift/tuples.expect.txt"
+    echo "  ✓ Fixed tuples.expect.txt trailing newline"
 fi
 
 echo ""

@@ -112,9 +112,9 @@ internal final class ModeCompiler {
             return cached
         }
 
-        // Detect cycles - if we're already compiling this exact mode instance, return a placeholder
+        // Detect cycles - return the in-progress compiled mode if available
         if compilingModes.contains(mode.id) {
-            return CompiledMode()
+            return modeCache[mode.id] ?? CompiledMode()
         }
 
         // Mark as being compiled
@@ -132,13 +132,17 @@ internal final class ModeCompiler {
         }
 
         // Compute effective begin pattern (handle match -> begin and beginKeywords)
+        let beginKeywordWords: [String]? = {
+            guard parent != nil, let beginKeywords = mode.beginKeywords else { return nil }
+            return beginKeywords.split(separator: " ").map { String($0) }
+        }()
+
         let effectiveBegin: RegexPattern? = {
             if let match = mode.match {
                 return match
             }
-            if let beginKeywords = mode.beginKeywords {
-                let words = beginKeywords.split(separator: " ").map { String($0) }
-                let pattern = "\\b(" + words.joined(separator: "|") + ")\\b"
+            if let words = beginKeywordWords {
+                let pattern = "\\b(" + words.joined(separator: "|") + ")(?!\\.)(?=\\b|\\s)"
                 return .string(pattern)
             }
             return mode.begin
@@ -172,7 +176,11 @@ internal final class ModeCompiler {
         }
 
         // Copy flags
-        cmode.relevance = mode.relevance ?? 1
+        if let relevance = mode.relevance {
+            cmode.relevance = relevance
+        } else {
+            cmode.relevance = beginKeywordWords != nil ? 0 : 1
+        }
         cmode.excludeBegin = mode.excludeBegin
         cmode.excludeEnd = mode.excludeEnd
         cmode.returnBegin = mode.returnBegin
@@ -193,7 +201,17 @@ internal final class ModeCompiler {
         }
 
         // Compile keywords
-        if let keywords = mode.keywords {
+        let effectiveKeywords: Keywords? = {
+            if let keywords = mode.keywords {
+                return keywords
+            }
+            if let words = beginKeywordWords {
+                return Keywords(keyword: words)
+            }
+            return nil
+        }()
+
+        if let keywords = effectiveKeywords {
             cmode.keywords = compileKeywords(keywords)
             let pattern = keywords.pattern?.source ?? #"\w+"#
             cmode.keywordPatternRe = langRe(pattern, global: true)
@@ -203,26 +221,36 @@ internal final class ModeCompiler {
         let effectiveSelfMode = selfMode ?? mode
 
         // Expand variants
-        var containsModes: [Mode] = []
+        var containsModes: [ContainsEntry] = []
         if let variants = mode.variants {
             for variantBox in variants {
                 let merged = mergeMode(mode, variantBox.value)
-                containsModes.append(contentsOf: expandContains(merged.contains, selfMode: effectiveSelfMode))
+                containsModes.append(contentsOf: expandContains(merged.contains, selfMode: merged))
             }
         } else {
             containsModes = expandContains(mode.contains, selfMode: effectiveSelfMode)
         }
 
         // Compile contains
-        for childMode in containsModes {
-            let compiled = compileMode(childMode, parent: cmode, depth: depth + 1, selfMode: effectiveSelfMode)
+        var selfReferenceChildren: [CompiledMode] = []
+        for entry in containsModes {
+            let compiled = compileMode(entry.mode, parent: cmode, depth: depth + 1, selfMode: nil)
             compiled.parent = cmode
             cmode.contains.append(compiled)
+            if entry.isSelfReference {
+                selfReferenceChildren.append(compiled)
+            }
+        }
+        if !selfReferenceChildren.isEmpty {
+            for child in selfReferenceChildren {
+                child.contains = cmode.contains
+                child.matcher = buildModeRegex(child)
+            }
         }
 
         // Compile starts
         if let startsBox = mode.starts {
-            cmode.starts = compileMode(startsBox.value, parent: parent, depth: depth + 1, selfMode: effectiveSelfMode)
+            cmode.starts = compileMode(startsBox.value, parent: parent, depth: depth + 1, selfMode: nil)
         }
 
         // Build matcher
@@ -246,8 +274,13 @@ internal final class ModeCompiler {
         return compiled
     }
 
-    private func expandContains(_ contains: [ModeReference], selfMode: Mode) -> [Mode] {
-        var result: [Mode] = []
+    private struct ContainsEntry {
+        let mode: Mode
+        let isSelfReference: Bool
+    }
+
+    private func expandContains(_ contains: [ModeReference], selfMode: Mode) -> [ContainsEntry] {
+        var result: [ContainsEntry] = []
         for ref in contains {
             switch ref {
             case .self:
@@ -267,7 +300,7 @@ internal final class ModeCompiler {
                     excludeEnd: selfMode.excludeEnd,
                     returnBegin: selfMode.returnBegin,
                     returnEnd: selfMode.returnEnd,
-                    endsWithParent: true,  // .self references should end with parent
+                    endsWithParent: selfMode.endsWithParent,
                     endsParent: selfMode.endsParent,
                     skip: selfMode.skip,
                     subLanguage: selfMode.subLanguage,
@@ -277,15 +310,15 @@ internal final class ModeCompiler {
                     onEnd: selfMode.onEnd,
                     beginKeywords: selfMode.beginKeywords
                 )
-                result.append(selfCopy)
+                result.append(ContainsEntry(mode: selfCopy, isSelfReference: true))
             case .mode(let mBox):
                 let m = mBox.value
                 if let variants = m.variants {
                     for variantBox in variants {
-                        result.append(mergeMode(m, variantBox.value))
+                        result.append(ContainsEntry(mode: mergeMode(m, variantBox.value), isSelfReference: false))
                     }
                 } else {
-                    result.append(m)
+                    result.append(ContainsEntry(mode: m, isSelfReference: false))
                 }
             }
         }

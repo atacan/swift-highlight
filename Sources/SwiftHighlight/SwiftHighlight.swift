@@ -265,7 +265,10 @@ public actor Highlight {
         // Use UTF-16 based indexing to match NSRegularExpression
         var utf16Index = 0
         let codeUTF16 = code.utf16
+        let nsCode = code as NSString
         var resumeScanAtSamePosition = false
+        var lastMatchType: MatchType?
+        var lastMatchIndex: Int?
 
         // Process continuations - open scopes for modes on the stack
         var current: CompiledMode? = top
@@ -298,9 +301,8 @@ public actor Highlight {
 
             guard let match = top.matcher?.exec(code) else {
                 // No more matches - add remaining text
-                let startIndex = String.Index(utf16Offset: utf16Index, in: code)
-                if startIndex < code.endIndex {
-                    let remaining = String(code[startIndex...])
+                if utf16Index <= codeUTF16.count {
+                    let remaining = nsCode.substring(from: utf16Index)
                     modeBuffer += remaining
                 }
                 processBuffer(&modeBuffer, emitter: emitter, mode: top, keywordHits: &keywordHits, relevance: &relevance, language: language)
@@ -309,18 +311,34 @@ public actor Highlight {
 
             // Add text before match
             if match.index > utf16Index {
-                let startIndex = String.Index(utf16Offset: utf16Index, in: code)
-                let endIndex = String.Index(utf16Offset: match.index, in: code)
-                if startIndex < endIndex {
-                    let beforeMatch = String(code[startIndex..<endIndex])
+                let length = match.index - utf16Index
+                if length > 0 {
+                    let beforeMatch = nsCode.substring(with: NSRange(location: utf16Index, length: length))
                     modeBuffer += beforeMatch
                 }
             }
 
-            // Process the match
             let lexeme = match[0] ?? ""
             let lexemeUTF16Length = lexeme.utf16.count
             let processedCount: Int
+
+
+
+            // Avoid infinite loops on zero-width begin/end at the same index.
+            if lastMatchType == .begin,
+               match.type == .end,
+               lastMatchIndex == match.index,
+               lexemeUTF16Length == 0 {
+                if utf16Index < codeUTF16.count {
+                    let nextChar = nsCode.substring(with: NSRange(location: utf16Index, length: 1))
+                    modeBuffer += nextChar
+                }
+                utf16Index = min(utf16Index + 1, codeUTF16.count)
+                continue
+            }
+
+            lastMatchType = match.type
+            lastMatchIndex = match.index
 
             switch match.type {
             case .begin:
@@ -409,6 +427,19 @@ public actor Highlight {
         buffer = ""
     }
 
+    /// Checks if the current mode is within a string interpolation context (scope="subst")
+    /// by walking up the parent chain.
+    private func isInInterpolationContext(_ mode: CompiledMode) -> Bool {
+        var current: CompiledMode? = mode
+        while current != nil {
+            if current?.scope == "subst" {
+                return true
+            }
+            current = current?.parent
+        }
+        return false
+    }
+
     private func processKeywords(
         _ text: String,
         emitter: TokenTreeEmitter,
@@ -419,6 +450,8 @@ public actor Highlight {
     ) {
         guard let keywords = mode.keywords,
               let patternRe = mode.keywordPatternRe else {
+            // No keywords defined: just emit as plain text
+            // (The main loop is responsible for matching contains modes during scanning)
             emitter.addText(text)
             return
         }
@@ -429,15 +462,29 @@ public actor Highlight {
         // Use matches(in:range:) instead of enumerateMatches to avoid closure capture issues
         let matches = patternRe.matches(in: text, options: [], range: range)
 
+        // If no keyword pattern matches at all, just emit as plain text
+        // (This handles cases like "1e_1" in Python where the keyword pattern
+        // requires starting with a letter but the text starts with a digit)
+        guard !matches.isEmpty else {
+            emitter.addText(text)
+            return
+        }
+
         // Use cached case-insensitivity flag from compiled language
         let useCaseInsensitive = language.caseInsensitive
 
         for result in matches {
             guard let matchRange = Range(result.range, in: text) else { continue }
 
-            // Add text before keyword
+            // Process text before keyword (may contain operators, numbers, etc.)
+            // Only apply in interpolation contexts (scope="subst") to avoid breaking other languages
             if matchRange.lowerBound > lastIndex {
-                emitter.addText(String(text[lastIndex..<matchRange.lowerBound]))
+                let beforeText = String(text[lastIndex..<matchRange.lowerBound])
+                if isInInterpolationContext(mode) {
+                    processNonKeywordText(beforeText, emitter: emitter, mode: mode, relevance: &relevance)
+                } else {
+                    emitter.addText(beforeText)
+                }
             }
 
             let word = String(text[matchRange])
@@ -460,15 +507,213 @@ public actor Highlight {
                     emitter.endScope()
                 }
             } else {
-                emitter.addText(word)
+                // Not a keyword: try to match with contains modes
+                // For single words, only apply if a pattern matches the ENTIRE word
+                // (prevents partial matches like "1" in "1e_1")
+                processWordWithContains(word, in: text, at: matchRange, emitter: emitter, mode: mode, relevance: &relevance)
             }
 
             lastIndex = matchRange.upperBound
         }
 
-        // Add remaining text
+        // Process remaining text (may contain operators, numbers, etc.)
+        // Only apply in interpolation contexts (scope="subst") to avoid breaking other languages
         if lastIndex < text.endIndex {
-            emitter.addText(String(text[lastIndex...]))
+            let remainingText = String(text[lastIndex...])
+            if isInInterpolationContext(mode) {
+                processNonKeywordText(remainingText, emitter: emitter, mode: mode, relevance: &relevance)
+            } else {
+                emitter.addText(remainingText)
+            }
+        }
+    }
+
+    /// Processes a single word by trying to match against the mode's contains patterns.
+    /// Only highlights if a pattern matches the ENTIRE word to prevent partial matches.
+    /// Checks patterns against the original text context to support lookahead/lookbehind.
+    private func processWordWithContains(
+        _ word: String,
+        in text: String,
+        at wordRange: Range<String.Index>,
+        emitter: TokenTreeEmitter,
+        mode: CompiledMode,
+        relevance: inout Int
+    ) {
+        guard !word.isEmpty else { return }
+
+        // Use parent's contains if current mode has keywords but empty contains
+        // (indicates a .self reference in a keywords + contains mode)
+        let shouldUseParentContains = mode.keywords != nil &&
+            mode.contains.isEmpty &&
+            mode.parent != nil &&
+            mode.endsWithParent
+        let effectiveContains = shouldUseParentContains
+            ? (mode.parent?.contains ?? [])
+            : mode.contains
+
+        // If no contains available, just emit as plain text
+        guard !effectiveContains.isEmpty else {
+            emitter.addText(word)
+            return
+        }
+
+        // Try to find a match-only pattern that matches the ENTIRE word
+        // Check against the original text to support lookahead/lookbehind assertions
+        for child in effectiveContains {
+            guard let beginRe = child.beginRe else { continue }
+
+            // Only consider match-only modes
+            let isMatchOnlyMode = child.terminatorEnd.isEmpty ||
+                child.terminatorEnd == #"\B|\b"# ||
+                child.terminatorEnd == #"(?:\B|\b)"#
+            guard isMatchOnlyMode else { continue }
+
+            // Check if the pattern matches at the word's position in the original text
+            // For lookbehind patterns, we need to check a bit before the word to include context
+            let searchStartIndex: String.Index
+            if text.distance(from: text.startIndex, to: wordRange.lowerBound) >= 5 {
+                searchStartIndex = text.index(wordRange.lowerBound, offsetBy: -5)
+            } else {
+                searchStartIndex = text.startIndex
+            }
+            let textFromBefore = String(text[searchStartIndex...])
+            let range = NSRange(textFromBefore.startIndex..., in: textFromBefore)
+
+            if let match = beginRe.firstMatch(in: textFromBefore, options: [], range: range) {
+                // For patterns with capture groups, check if capture group 1 matches the word
+                if match.numberOfRanges > 1, let captureRange = Range(match.range(at: 1), in: textFromBefore) {
+                    let capturedText = String(textFromBefore[captureRange])
+                    if capturedText == word {
+                        // The captured group matches the word - highlight it
+                        if let beginScope = child.beginScope, let firstScope = beginScope.scopes[1] {
+                            emitter.startScope(firstScope)
+                            emitter.addText(word)
+                            emitter.endScope()
+                        } else if let scope = child.scope {
+                            emitter.startScope(scope)
+                            emitter.addText(word)
+                            emitter.endScope()
+                        } else {
+                            emitter.addText(word)
+                        }
+                        relevance += child.relevance
+                        return
+                    }
+                } else if match.range.location >= 0 && match.range.length == word.utf16.count {
+                    // No capture groups - check if match covers exactly the word
+                    if let scope = child.scope {
+                        emitter.startScope(scope)
+                        emitter.addText(word)
+                        emitter.endScope()
+                    } else {
+                        emitter.addText(word)
+                    }
+                    relevance += child.relevance
+                    return
+                }
+            }
+        }
+
+        // No pattern matched the entire word - emit as plain text
+        emitter.addText(word)
+    }
+
+    /// Processes text that doesn't match keywords by trying to match operators, numbers,
+    /// and other match-only patterns from the mode's contains.
+    /// This handles gaps between keyword matches (e.g., operators like "-" in "x - 2").
+    private func processNonKeywordText(
+        _ text: String,
+        emitter: TokenTreeEmitter,
+        mode: CompiledMode,
+        relevance: inout Int
+    ) {
+        guard !text.isEmpty else { return }
+
+        // Use parent's contains if current mode has keywords but empty contains
+        // (indicates a .self reference in a keywords + contains mode)
+        let shouldUseParentContains = mode.keywords != nil &&
+            mode.contains.isEmpty &&
+            mode.parent != nil &&
+            mode.endsWithParent
+        let effectiveContains = shouldUseParentContains
+            ? (mode.parent?.contains ?? [])
+            : mode.contains
+
+        // If no contains available, just emit as plain text
+        guard !effectiveContains.isEmpty else {
+            emitter.addText(text)
+            return
+        }
+
+        // Collect all match-only modes
+        let matchOnlyModes = effectiveContains.filter { child in
+            guard child.beginRe != nil else { return false }
+            return child.terminatorEnd.isEmpty ||
+                child.terminatorEnd == #"\B|\b"# ||
+                child.terminatorEnd == #"(?:\B|\b)"#
+        }
+
+        guard !matchOnlyModes.isEmpty else {
+            emitter.addText(text)
+            return
+        }
+
+        // Find all matches from all patterns
+        struct Match {
+            let range: Range<String.Index>
+            let scope: String?
+            let relevance: Int
+        }
+
+        var matches: [Match] = []
+        let nsRange = NSRange(text.startIndex..., in: text)
+
+        for child in matchOnlyModes {
+            guard let beginRe = child.beginRe else { continue }
+
+            let childMatches = beginRe.matches(in: text, options: [], range: nsRange)
+            for match in childMatches {
+                guard let range = Range(match.range, in: text) else { continue }
+                matches.append(Match(
+                    range: range,
+                    scope: child.scope,
+                    relevance: child.relevance
+                ))
+            }
+        }
+
+        // Sort by start position
+        matches.sort { $0.range.lowerBound < $1.range.lowerBound }
+
+        // Process matches, avoiding overlaps
+        var currentIndex = text.startIndex
+        for match in matches {
+            // Skip if this match starts before our current position (overlapping)
+            guard match.range.lowerBound >= currentIndex else { continue }
+
+            // Emit text before this match as plain text
+            if match.range.lowerBound > currentIndex {
+                emitter.addText(String(text[currentIndex..<match.range.lowerBound]))
+            }
+
+            // Emit the matched text with scope
+            let matchedText = String(text[match.range])
+            if let scope = match.scope {
+                emitter.startScope(scope)
+                emitter.addText(matchedText)
+                emitter.endScope()
+            } else {
+                emitter.addText(matchedText)
+            }
+            relevance += match.relevance
+
+            // Move past this match
+            currentIndex = match.range.upperBound
+        }
+
+        // Emit any remaining text as plain text
+        if currentIndex < text.endIndex {
+            emitter.addText(String(text[currentIndex...]))
         }
     }
 
@@ -489,9 +734,8 @@ public actor Highlight {
                 emitter.addText(text)
                 return
             }
-            let result = highlight(text, language: langName, ignoreIllegals: true)
-            // Would need to add sublanguage emitter
-            emitter.addText(result.value)
+            let result = parse(text, language: langName, ignoreIllegals: true)
+            emitter.addSublanguage(result.tokenTree, name: langName)
             if mode.relevance > 0 {
                 relevance += result.relevance
             }
@@ -608,7 +852,7 @@ public actor Highlight {
         language: CompiledMode,
         code: String
     ) throws -> Int? {
-        let matchPlusRemainder = String(code[code.index(code.startIndex, offsetBy: match.index)...])
+        let matchPlusRemainder = (code as NSString).substring(from: match.index)
 
         guard let endMode = endOfMode(mode: top, match: match, matchPlusRemainder: matchPlusRemainder) else {
             return nil

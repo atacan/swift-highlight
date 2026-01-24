@@ -31,9 +31,8 @@ internal struct EnhancedMatch {
         let range = match.range(at: adjustedIndex)
         guard range.location != NSNotFound else { return nil }
         guard range.location + range.length <= text.utf16.count else { return nil }
-        let start = text.index(text.startIndex, offsetBy: range.location)
-        let end = text.index(start, offsetBy: range.length)
-        return String(text[start..<end])
+        let nsText = text as NSString
+        return nsText.substring(with: range)
     }
 }
 
