@@ -1,5 +1,8 @@
 # SwiftHighlight
 
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fatacan%2Fswift-highlight%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/atacan/swift-highlight)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Fatacan%2Fswift-highlight%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/atacan/swift-highlight)
+
 A pure Swift port of [highlight.js](https://highlightjs.org/) for syntax highlighting. No dependencies beyond Foundation.
 
 See [Benchmarks](Benchmarks/README.md) for performance comparison against running the JS code with JavascriptCore like the other packages do.
