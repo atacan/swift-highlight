@@ -140,8 +140,21 @@ This prints HTML, colored ANSI terminal output, and the token tree structure.
 
 ## Supported Languages
 
-- Python
-- JSON
+Register languages with the matching `register...()` method before highlighting.
+
+| Language | Registration | Aliases |
+| --- | --- | --- |
+| Diff | `registerDiff()` | `patch` |
+| Go | `registerGo()` | `golang` |
+| HTML, XML | `registerXml()` | `html`, `xhtml`, `rss`, `atom`, `xjb`, `xsd`, `xsl`, `plist`, `wsf`, `svg` |
+| JSON | `registerJSON()` | `jsonc`, `json5` |
+| Markdown | `registerMarkdown()` | `md`, `mkdown`, `mkd` |
+| Nginx config | `registerNginx()` | `nginxconf` |
+| Python | `registerPython()` | `py`, `gyp`, `ipython` |
+| Rust | `registerRust()` | `rs` |
+| Swift | `registerSwift()` | |
+| TOML, also INI | `registerIni()` | `toml` |
+| YAML | `registerYaml()` | `yml` |
 
 ## Attribution
 
