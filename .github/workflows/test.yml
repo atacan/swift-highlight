@@ -1,0 +1,22 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      # Fixtures are gitignored by design; sync them from the highlight.js
+      # submodule before running the test suite.
+      - name: Sync fixtures
+        run: ./scripts/sync-fixtures.sh
+
+      - name: Run tests
+        run: swift test
