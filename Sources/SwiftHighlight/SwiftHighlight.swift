@@ -55,11 +55,13 @@ public actor Highlight {
         do {
             return try _parse(language: language, code: code, ignoreIllegals: ignoreIllegals)
         } catch {
-            // Return empty tree on error
-            let emptyTree = TokenTree(root: ScopeNode(), language: language)
+            // Degrade gracefully on error: emit the source as plain text
+            // instead of an empty tree, so callers get usable output while
+            // the failure is still recorded in errorRaised.
+            let fallbackTree = TokenTree(root: ScopeNode(children: [.text(code)]), language: language)
             return ParseResult(
                 language: language,
-                tokenTree: emptyTree,
+                tokenTree: fallbackTree,
                 relevance: 0,
                 illegal: false,
                 code: code,
@@ -284,12 +286,23 @@ public actor Highlight {
         }
 
         // Main parsing loop
-        var iterations = 0
+        // Guard against genuine infinite loops by counting consecutive
+        // iterations that make no progress (utf16Index does not advance),
+        // rather than counting total iterations, so large-but-valid inputs
+        // with many tokens are not falsely rejected.
+        var stallCount = 0
+        var lastProgressIndex = utf16Index
+        let maxStallCount = 10_000
 
         while utf16Index < codeUTF16.count {
-            iterations += 1
-            if iterations > 100000 {
-                throw HighlightError.infiniteLoop
+            if utf16Index > lastProgressIndex {
+                lastProgressIndex = utf16Index
+                stallCount = 0
+            } else {
+                stallCount += 1
+                if stallCount > maxStallCount {
+                    throw HighlightError.infiniteLoop
+                }
             }
 
             if resumeScanAtSamePosition {

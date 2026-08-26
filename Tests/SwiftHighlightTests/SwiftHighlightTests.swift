@@ -120,6 +120,19 @@ final class SwiftHighlightTests: XCTestCase {
         XCTAssertTrue(result.value.contains("hljs-comment"), "Should contain comment highlighting: \(result.value)")
     }
 
+    func testLargeInputDoesNotHitIterationGuard() async throws {
+        let hljs = Highlight()
+        await hljs.registerPython()
+
+        // 150k single-token matches: exceeds the 100000-iteration guard
+        // even though parsing is progressing normally.
+        let code = String(repeating: "# c\n", count: 150_000)
+        let result = await hljs.highlight(code, language: "python")
+
+        XCTAssertNil(result.errorRaised, "Large but valid input should not error: \(String(describing: result.errorRaised))")
+        XCTAssertFalse(result.value.isEmpty, "Large valid input should produce output")
+    }
+
     func testHTMLEscaping() async throws {
         let hljs = Highlight()
         await hljs.registerPython()
