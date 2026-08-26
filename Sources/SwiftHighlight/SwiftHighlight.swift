@@ -46,7 +46,10 @@ public actor Highlight {
     ///   - code: The source code to parse
     ///   - language: The language name to use
     ///   - ignoreIllegals: Whether to ignore illegal syntax (default: true)
-    /// - Returns: The parse result with token tree
+    /// - Returns: The parse result with token tree. If parsing fails, the
+    ///   result contains the source as plain text and the failure is recorded
+    ///   in `errorRaised`; callers should check `errorRaised` when they need
+    ///   to distinguish fallback output from successful highlighting.
     public func parse(
         _ code: String,
         language: String,
@@ -77,7 +80,9 @@ public actor Highlight {
     ///   - language: The language name to use
     ///   - ignoreIllegals: Whether to ignore illegal syntax (default: true)
     ///   - renderer: The renderer to use for output
-    /// - Returns: The highlight result with rendered output
+    /// - Returns: The highlight result with rendered output. On a parse
+    ///   error, the output degrades to plain text and the failure is
+    ///   recorded in `errorRaised`.
     public func highlight<R: TokenRenderer>(
         _ code: String,
         language: String,
@@ -336,19 +341,6 @@ public actor Highlight {
             let processedCount: Int
 
 
-
-            // Avoid infinite loops on zero-width begin/end at the same index.
-            if lastMatchType == .begin,
-               match.type == .end,
-               lastMatchIndex == match.index,
-               lexemeUTF16Length == 0 {
-                if utf16Index < codeUTF16.count {
-                    let nextChar = nsCode.substring(with: NSRange(location: utf16Index, length: 1))
-                    modeBuffer += nextChar
-                }
-                utf16Index = min(utf16Index + 1, codeUTF16.count)
-                continue
-            }
 
             lastMatchType = match.type
             lastMatchIndex = match.index

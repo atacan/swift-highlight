@@ -133,6 +133,33 @@ final class SwiftHighlightTests: XCTestCase {
         XCTAssertFalse(result.value.isEmpty, "Large valid input should produce output")
     }
 
+    func testGenuineInfiniteLoopIsCaught() async throws {
+        let hljs = Highlight()
+
+        // A mode whose begin and end patterns both match zero-width:
+        // push/pop cycles forever without consuming input; the parser
+        // should detect the stall and throw .infiniteLoop (surfaced via
+        // errorRaised), not hang forever.
+        await hljs.registerLanguage("staller") { _ in
+            Language(
+                name: "Staller",
+                disableAutodetect: true,
+                contains: [
+                    .mode(Mode(scope: "stall", begin: "(?=.)", end: "^"))
+                ]
+            )
+        }
+
+        let result = await hljs.highlight("abc", language: "staller")
+
+        guard case .infiniteLoop = (result.errorRaised as? HighlightError) ?? .unknownLanguage("") else {
+            XCTFail("Expected .infiniteLoop, got: \(String(describing: result.errorRaised))")
+            return
+        }
+        // Error fallback should still produce plain-text output
+        XCTAssertTrue(result.value.contains("abc"), "Fallback output should contain source text: \(result.value)")
+    }
+
     func testHTMLEscaping() async throws {
         let hljs = Highlight()
         await hljs.registerPython()
