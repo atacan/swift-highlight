@@ -340,8 +340,6 @@ public actor Highlight {
             let lexemeUTF16Length = lexeme.utf16.count
             let processedCount: Int
 
-
-
             lastMatchType = match.type
             lastMatchIndex = match.index
 
@@ -788,9 +786,6 @@ public actor Highlight {
         }
 
         startNewMode(newMode, match: match, emitter: emitter, top: &top, modeBuffer: &modeBuffer, language: language)
-
-        // Debug: verify parent chain
-        // Uncomment to debug: print("  AFTER startNewMode: newTop.scope=\(top.scope ?? "nil") newTop.parent.scope=\(top.parent?.scope ?? "nil")")
 
         return newMode.returnBegin ? 0 : lexeme.count
     }
